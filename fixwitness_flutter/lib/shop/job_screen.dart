@@ -45,7 +45,9 @@ class _JobScreenState extends State<JobScreen> {
     _jobId = widget.serverJobId;
     // Operations confirmed before this screen opened are already in the data.
     _seenConfirmed.addAll(
-      s.operations.where((o) => o.status == OpStatus.confirmed).map((o) => o.opId.uuid),
+      s.operations
+          .where((o) => o.status == OpStatus.confirmed)
+          .map((o) => o.opId.uuid),
     );
     s.addListener(_servicesChanged);
     _load();
@@ -72,14 +74,16 @@ class _JobScreenState extends State<JobScreen> {
     }
     // When queued evidence for this job reaches the server, show the server's
     // copy (it disappears from "On this phone" at the same moment).
-    final newlyConfirmed = s.operations.where(
-      (o) =>
-          o.status == OpStatus.confirmed &&
-          o.kind != OpKind.createJob &&
-          _jobId != null &&
-          o.serverJobId == _jobId &&
-          _seenConfirmed.add(o.opId.uuid),
-    ).toList();
+    final newlyConfirmed = s.operations
+        .where(
+          (o) =>
+              o.status == OpStatus.confirmed &&
+              o.kind != OpKind.createJob &&
+              _jobId != null &&
+              o.serverJobId == _jobId &&
+              _seenConfirmed.add(o.opId.uuid),
+        )
+        .toList();
     if (newlyConfirmed.isNotEmpty) _load();
     if (mounted) setState(() {});
   }

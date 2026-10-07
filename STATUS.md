@@ -51,10 +51,13 @@ Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter
 
 ## Unresolved problems / not verified
 
-- **No on-device Android run.** The debug APK build is reported below; there is no Android device
-  attached and the only emulator system image on this machine is an incomplete download (empty
-  folder), and `cmdline-tools` is missing. Camera capture, Android file storage and offline
-  behaviour on a phone have not been observed.
+- **No on-device Android run.** `flutter build apk --debug --dart-define=SERVER_URL=http://10.0.2.2:8080/`
+  succeeds (173 MB debug APK; the first build took 64 min because Gradle installed NDK 28.2 and
+  SDK Platform 35, whose licences were already accepted on this machine). But no Android device is
+  attached, the only emulator system image here is an incomplete download (empty folder) and
+  `cmdline-tools` is missing, so camera capture, Android file storage and offline behaviour on a
+  phone have not been observed. Build warning to track: `flutter_web_auth_2` (pulled in by the
+  Serverpod auth UI) still applies the Kotlin Gradle Plugin, which future Flutter versions reject.
 - **Not deployed publicly.** Serverpod Cloud needs an account created by the owner
   (console.serverpod.dev) and `serverpod cloud launch`; ngrok is installed but has no auth token.
   The demo currently runs on this PC (http://localhost:8082).

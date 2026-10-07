@@ -474,7 +474,8 @@ class _CustomerReviewPageState extends State<CustomerReviewPage> {
     } on FwException catch (err) {
       // The server explains exactly why; reload so the customer sees what is
       // current now. A replaced version is phrased here in local terms.
-      final replaced = err.code == FwErrorCode.estimateOutdated &&
+      final replaced =
+          err.code == FwErrorCode.estimateOutdated &&
           err.currentVersion != null &&
           err.currentVersion != err.attemptedVersion;
       setState(
