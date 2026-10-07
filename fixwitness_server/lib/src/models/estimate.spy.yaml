@@ -1,0 +1,24 @@
+### One issued estimate version. Rows are inserted once; afterwards only status and
+### decidedAt change. Lines and totals are never edited.
+class: Estimate
+table: estimate
+fields:
+  jobId: int, relation(parent=repair_job, onDelete=Cascade)
+  versionNumber: int
+  status: EstimateStatus
+  lines: List<EstimateLine>
+  totalMinor: int
+  currency: String
+  note: String?
+  ### Why the shop issued a new version (required from version 2 on).
+  reasonForRevision: String?
+  ### SHA-256 over the canonical content; the customer approves this exact hash.
+  contentHash: String
+  issuedAt: DateTime
+  issuedByUserId: UuidValue
+  issuedByName: String
+  decidedAt: DateTime?
+indexes:
+  estimate_version_idx:
+    fields: jobId, versionNumber
+    unique: true

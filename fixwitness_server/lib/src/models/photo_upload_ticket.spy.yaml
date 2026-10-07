@@ -1,0 +1,7 @@
+### Answer to preparePhotoUpload. When `alreadyStored` is true the bytes from an
+### earlier attempt are on the server and the device should only register them.
+class: PhotoUploadTicket
+fields:
+  alreadyStored: bool
+  uploadDescription: String?
+  maxBytes: int

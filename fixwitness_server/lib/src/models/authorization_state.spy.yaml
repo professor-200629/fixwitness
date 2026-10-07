@@ -1,0 +1,13 @@
+### What work is authorized right now, derived on the server from estimates and
+### decisions so that no client can show unapproved work as authorized.
+class: AuthorizationState
+fields:
+  authorizedVersion: int?
+  authorizedTotalMinor: int?
+  latestVersion: int?
+  latestTotalMinor: int?
+  ### The latest issued version has no approval yet.
+  pendingApproval: bool
+  ### A revised version exists that changes work which was already approved.
+  revisionPending: bool
+  label: String

@@ -1,0 +1,20 @@
+class: EvidencePhoto
+table: evidence_photo
+fields:
+  jobId: int, relation(parent=repair_job, onDelete=Cascade)
+  clientOpId: UuidValue
+  stage: PhotoStage
+  caption: String?
+  storagePath: String?, scope=serverOnly
+  contentType: String
+  sizeBytes: int
+  sha256: String
+  capturedAt: DateTime
+  uploadedByUserId: UuidValue
+  uploadedByName: String
+  registeredAt: DateTime
+  customerVisible: bool, default=true
+indexes:
+  evidence_photo_op_idx:
+    fields: clientOpId
+    unique: true

@@ -1,0 +1,8 @@
+enum: ConditionState
+serialized: byName
+values:
+  - ok
+  - damaged
+  - notWorking
+  - notTested
+  - notApplicable

@@ -1,0 +1,12 @@
+class: ShopMember
+table: shop_member
+fields:
+  shopId: int, relation(parent=shop, onDelete=Cascade)
+  authUserId: UuidValue
+  displayName: String
+  role: ShopRole
+  createdAt: DateTime, default=now
+indexes:
+  shop_member_user_idx:
+    fields: authUserId
+    unique: true

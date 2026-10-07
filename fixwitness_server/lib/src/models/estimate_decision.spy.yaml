@@ -1,0 +1,19 @@
+### The customer decision on one exact estimate version.
+class: EstimateDecision
+table: estimate_decision
+fields:
+  jobId: int, relation(parent=repair_job, onDelete=Cascade)
+  estimateId: int, relation(parent=estimate, onDelete=Cascade)
+  versionNumber: int
+  contentHash: String
+  decision: DecisionKind
+  typedName: String
+  declineReason: String?
+  customerLinkId: int
+  ipAddress: String?
+  userAgent: String?
+  decidedAt: DateTime
+indexes:
+  estimate_decision_estimate_idx:
+    fields: estimateId
+    unique: true

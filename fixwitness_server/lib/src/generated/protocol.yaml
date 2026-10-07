@@ -9,5 +9,28 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
-greeting:
-  - hello:
+customer:
+  - view:
+  - approve:
+  - decline:
+  - acknowledgeCollection:
+evidence:
+  - preparePhotoUpload:
+  - registerPhoto:
+  - photoUrl:
+jobs:
+  - list:
+  - get:
+  - create:
+  - addNote:
+  - saveCondition:
+  - issueEstimate:
+  - startWork:
+  - completeRepair:
+  - recordCollection:
+links:
+  - create:
+  - revoke:
+shop:
+  - myShop:
+  - createShop:

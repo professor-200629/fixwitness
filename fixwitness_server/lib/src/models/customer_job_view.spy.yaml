@@ -1,0 +1,22 @@
+### Everything a customer sees through their link. Built on the server from
+### customer-visible records only.
+class: CustomerJobView
+fields:
+  shopName: String
+  jobNumber: int
+  deviceLabel: String
+  customerName: String
+  reportedFault: String
+  status: JobStatus
+  currency: String
+  authorization: AuthorizationState
+  currentEstimate: Estimate?
+  estimates: List<Estimate>
+  decisions: List<EstimateDecision>
+  condition: ConditionReport?
+  photos: List<CustomerPhoto>
+  notes: List<JobNote>
+  history: List<JobEvent>
+  linkExpiresAt: DateTime
+  canDecide: bool
+  canAcknowledgeCollection: bool

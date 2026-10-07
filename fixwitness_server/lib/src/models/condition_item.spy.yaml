@@ -1,0 +1,6 @@
+class: ConditionItem
+fields:
+  key: String
+  label: String
+  state: ConditionState
+  note: String?

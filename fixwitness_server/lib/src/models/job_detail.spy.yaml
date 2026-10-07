@@ -1,0 +1,12 @@
+class: JobDetail
+fields:
+  job: RepairJob
+  shopCurrency: String
+  authorization: AuthorizationState
+  estimates: List<Estimate>
+  decisions: List<EstimateDecision>
+  conditionReports: List<ConditionReport>
+  photos: List<EvidencePhoto>
+  notes: List<JobNote>
+  events: List<JobEvent>
+  links: List<CustomerLink>

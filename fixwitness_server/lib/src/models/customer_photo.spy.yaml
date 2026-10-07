@@ -1,0 +1,7 @@
+class: CustomerPhoto
+fields:
+  id: int
+  stage: PhotoStage
+  caption: String?
+  capturedAt: DateTime
+  url: String

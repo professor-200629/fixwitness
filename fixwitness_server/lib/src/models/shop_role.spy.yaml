@@ -1,0 +1,5 @@
+enum: ShopRole
+serialized: byName
+values:
+  - owner
+  - technician

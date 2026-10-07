@@ -1,0 +1,17 @@
+### Append-only history. Written in the same transaction as the change it records.
+class: JobEvent
+table: job_event
+fields:
+  jobId: int, relation(parent=repair_job, onDelete=Cascade)
+  seq: int
+  type: JobEventType
+  actorKind: ActorKind
+  actorLabel: String
+  summary: String
+  customerVisible: bool
+  estimateVersion: int?
+  occurredAt: DateTime
+indexes:
+  job_event_seq_idx:
+    fields: jobId, seq
+    unique: true

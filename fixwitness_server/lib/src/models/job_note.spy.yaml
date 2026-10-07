@@ -1,0 +1,16 @@
+class: JobNote
+table: job_note
+fields:
+  jobId: int, relation(parent=repair_job, onDelete=Cascade)
+  clientOpId: UuidValue
+  text: String
+  customerVisible: bool, default=false
+  authorUserId: UuidValue
+  authorName: String
+  ### Device clock when written (may be offline).
+  writtenAt: DateTime
+  receivedAt: DateTime
+indexes:
+  job_note_op_idx:
+    fields: clientOpId
+    unique: true

@@ -1,0 +1,17 @@
+### A condition checklist snapshot. Append-only: a later check adds a new row, so
+### the intake record is never overwritten.
+class: ConditionReport
+table: condition_report
+fields:
+  jobId: int, relation(parent=repair_job, onDelete=Cascade)
+  clientOpId: UuidValue
+  items: List<ConditionItem>
+  recordedByUserId: UuidValue
+  recordedByName: String
+  ### Device clock when the technician saved it (may be offline).
+  capturedAt: DateTime
+  receivedAt: DateTime
+indexes:
+  condition_report_op_idx:
+    fields: clientOpId
+    unique: true

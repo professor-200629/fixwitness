@@ -1,0 +1,7 @@
+enum: PhotoStage
+serialized: byName
+values:
+  - intake
+  - progress
+  - completion
+  - handover

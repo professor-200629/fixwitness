@@ -1,0 +1,5 @@
+### Returned once when a customer link is created. `url` contains the secret token.
+class: CreatedLink
+fields:
+  link: CustomerLink
+  url: String

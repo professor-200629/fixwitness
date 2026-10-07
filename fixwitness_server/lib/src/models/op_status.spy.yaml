@@ -1,0 +1,7 @@
+enum: OpStatus
+serialized: byName
+values:
+  - pending
+  - syncing
+  - failed
+  - confirmed

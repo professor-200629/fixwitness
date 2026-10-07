@@ -1,0 +1,8 @@
+class: Shop
+table: shop
+fields:
+  name: String
+  ### ISO 4217 code. All money is stored in integer minor units of this currency.
+  currency: String, default='INR'
+  nextJobNumber: int, default=1
+  createdAt: DateTime, default=now

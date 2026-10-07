@@ -1,0 +1,11 @@
+class: JobSummary
+fields:
+  id: int
+  jobNumber: int
+  customerName: String
+  deviceLabel: String
+  status: JobStatus
+  rowVersion: int
+  updatedAt: DateTime
+  ### True when the latest issued estimate is not approved yet.
+  awaitingCustomer: bool

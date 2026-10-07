@@ -1,0 +1,8 @@
+### Lifecycle of one issued estimate version. Issued versions are never edited.
+enum: EstimateStatus
+serialized: byName
+values:
+  - issued
+  - superseded
+  - approved
+  - declined

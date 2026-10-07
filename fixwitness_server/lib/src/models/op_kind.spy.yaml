@@ -1,0 +1,7 @@
+enum: OpKind
+serialized: byName
+values:
+  - createJob
+  - addNote
+  - saveCondition
+  - addPhoto

@@ -1,0 +1,15 @@
+enum: FwErrorCode
+serialized: byName
+values:
+  - notFound
+  - forbidden
+  - invalidTransition
+  - validation
+  - estimateOutdated
+  - linkInvalid
+  - linkExpired
+  - linkRevoked
+  - shopAccountCannotApprove
+  - sensitiveContent
+  - uploadMissing
+  - uploadRejected

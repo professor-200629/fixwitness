@@ -48,3 +48,5 @@ sessionLogs:
 #  executionEnabled: true # Defaults to true
 #  concurrencyLimit: 1 # Defaults to 1, a negative or null value removes the limit
 #  scanInterval: 5000 # Unit in milliseconds, defaults to 5000
+
+maxRequestSize: 6291456

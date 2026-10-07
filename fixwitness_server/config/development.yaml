@@ -39,7 +39,7 @@ database:
   #maxConnectionCount: 10 # Defaults to 10, a negative or null value removes the limit
 
 
-maxRequestSize: 524288 # The maximum size of requests allowed in bytes
+maxRequestSize: 6291456 # 6 MiB: photos (max 5 MiB) upload through the API server with database storage
 
 sessionLogs:
   persistentEnabled: true

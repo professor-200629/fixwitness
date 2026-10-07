@@ -1,0 +1,10 @@
+### Every expected failure the server reports. `message` is written for the person
+### using the app; `code` lets the app react without parsing text.
+exception: FwException
+fields:
+  code: FwErrorCode
+  message: String
+  ### Set for estimateOutdated: the version the caller tried to act on.
+  attemptedVersion: int?
+  ### Set for estimateOutdated: the version that is current now.
+  currentVersion: int?

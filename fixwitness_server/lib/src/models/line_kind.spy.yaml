@@ -1,0 +1,6 @@
+enum: LineKind
+serialized: byName
+values:
+  - sparePart
+  - labour
+  - other

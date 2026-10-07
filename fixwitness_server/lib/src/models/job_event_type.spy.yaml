@@ -1,0 +1,17 @@
+enum: JobEventType
+serialized: byName
+values:
+  - jobCreated
+  - conditionRecorded
+  - photoAdded
+  - noteAdded
+  - estimateIssued
+  - estimateSuperseded
+  - estimateApproved
+  - estimateDeclined
+  - approvalRejected
+  - workStarted
+  - repairCompleted
+  - collectionAcknowledged
+  - customerLinkCreated
+  - customerLinkRevoked

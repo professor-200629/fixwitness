@@ -1,0 +1,14 @@
+### Device-side cache of job data so the shop app can show jobs offline.
+class: CachedJob
+table: cached_job
+database: client
+fields:
+  serverJobId: int
+  jobNumber: int
+  summaryJson: String
+  detailJson: String?
+  cachedAt: DateTime
+indexes:
+  cached_job_server_idx:
+    fields: serverJobId
+    unique: true

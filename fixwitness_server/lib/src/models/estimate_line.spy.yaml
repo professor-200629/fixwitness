@@ -1,0 +1,7 @@
+class: EstimateLine
+fields:
+  kind: LineKind
+  description: String
+  quantity: int
+  ### Integer minor units (paise for INR).
+  unitPriceMinor: int

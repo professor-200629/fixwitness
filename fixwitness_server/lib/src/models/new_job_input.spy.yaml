@@ -1,0 +1,9 @@
+class: NewJobInput
+fields:
+  customerName: String
+  customerPhone: String
+  deviceMake: String
+  deviceModel: String
+  deviceSerial: String?
+  reportedFault: String
+  accessories: String?

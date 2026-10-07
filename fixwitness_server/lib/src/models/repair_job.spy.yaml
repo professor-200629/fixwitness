@@ -1,0 +1,37 @@
+class: RepairJob
+table: repair_job
+fields:
+  shopId: int, relation(parent=shop, onDelete=Cascade)
+  ### Human-facing number, unique within the shop.
+  jobNumber: int
+  ### Operation id from the device that created the job; makes creation idempotent.
+  clientOpId: UuidValue
+  customerName: String
+  customerPhone: String
+  deviceMake: String
+  deviceModel: String
+  ### IMEI or serial as printed on the device. Never a passcode.
+  deviceSerial: String?
+  reportedFault: String
+  accessories: String?
+  status: JobStatus
+  ### Incremented by every state change; lets clients detect stale views.
+  rowVersion: int, default=1
+  ### Last JobEvent.seq written for this job.
+  eventSeq: int, default=0
+  ### Latest issued estimate (any status).
+  currentEstimateId: int?
+  ### Latest estimate the customer approved. Work beyond it is not authorized.
+  authorizedEstimateId: int?
+  createdByUserId: UuidValue
+  createdAt: DateTime, default=now
+  updatedAt: DateTime, default=now
+  completedAt: DateTime?
+  collectedAt: DateTime?
+indexes:
+  repair_job_number_idx:
+    fields: shopId, jobNumber
+    unique: true
+  repair_job_op_idx:
+    fields: clientOpId
+    unique: true

@@ -1,0 +1,11 @@
+### Where a repair job is in the workflow. Transitions are validated on the server.
+enum: JobStatus
+serialized: byName
+values:
+  - checkedIn
+  - awaitingApproval
+  - approved
+  - inProgress
+  - declined
+  - completed
+  - collected

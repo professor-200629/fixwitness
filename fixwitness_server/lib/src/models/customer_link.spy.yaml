@@ -1,0 +1,16 @@
+### A customer review link for exactly one job. Only the SHA-256 of the token is
+### stored; the token itself is returned once, when the link is created.
+class: CustomerLink
+table: customer_link
+fields:
+  jobId: int, relation(parent=repair_job, onDelete=Cascade)
+  tokenHash: String?, scope=serverOnly
+  createdByUserId: UuidValue
+  createdAt: DateTime
+  expiresAt: DateTime
+  revokedAt: DateTime?
+  lastOpenedAt: DateTime?
+indexes:
+  customer_link_token_idx:
+    fields: tokenHash
+    unique: true

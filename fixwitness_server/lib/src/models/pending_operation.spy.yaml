@@ -1,0 +1,27 @@
+### Durable device-side queue of work captured by a technician. Survives restarts.
+class: PendingOperation
+table: pending_operation
+database: client
+fields:
+  opId: UuidValue
+  kind: OpKind
+  status: OpStatus
+  ### Server job id, or null while the job itself is still queued.
+  serverJobId: int?
+  ### For work on a job created offline: the opId of that createJob operation.
+  parentOpId: UuidValue?
+  payloadJson: String
+  ### Photo bytes saved on the device until the server confirms them.
+  localFilePath: String?
+  ### True once the photo bytes are on the server (metadata may still be missing).
+  uploadDone: bool, default=false
+  attempts: int, default=0
+  lastError: String?
+  ### Id the server returned once confirmed (job, note, report, or photo id).
+  resultId: int?
+  createdAt: DateTime
+  updatedAt: DateTime
+indexes:
+  pending_operation_op_idx:
+    fields: opId
+    unique: true

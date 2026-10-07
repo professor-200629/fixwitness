@@ -1,0 +1,5 @@
+### Who the signed-in user is inside FixWitness.
+class: ShopContext
+fields:
+  shop: Shop
+  member: ShopMember

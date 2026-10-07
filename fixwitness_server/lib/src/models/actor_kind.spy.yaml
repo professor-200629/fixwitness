@@ -1,0 +1,6 @@
+enum: ActorKind
+serialized: byName
+values:
+  - shop
+  - customer
+  - system
