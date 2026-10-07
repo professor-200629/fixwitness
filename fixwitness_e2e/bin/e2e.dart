@@ -16,15 +16,11 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:fixwitness_client/fixwitness_client.dart';
-import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
-    show
-        ClientAuthSessionManager,
-        ClientAuthSessionManagerExtension,
-        ClientAuthSuccessStorage,
-        AuthSuccess;
+import 'package:fixwitness_e2e/harness.dart';
 
 late final String apiUrl;
 late final File mailbox;
+late final Harness h;
 final results = <({String name, bool ok, String detail})>[];
 
 void check(String name, bool ok, [String detail = '']) {
@@ -59,63 +55,6 @@ Future<void> expectFw(
   }
 }
 
-class MemoryAuthStorage implements ClientAuthSuccessStorage {
-  AuthSuccess? _v;
-  @override
-  Future<AuthSuccess?> get() async => _v;
-  @override
-  Future<void> set(AuthSuccess? data) async => _v = data;
-}
-
-Client anonymousClient() =>
-    Client(apiUrl, connectionTimeout: const Duration(seconds: 20));
-
-/// Signs in (registering first if needed) and returns a client with its own
-/// independent session.
-Future<Client> signIn(String email, String password) async {
-  final client = anonymousClient();
-  final manager = ClientAuthSessionManager(storage: MemoryAuthStorage());
-  client.authSessionManager = manager;
-  AuthSuccess auth;
-  try {
-    auth = await client.emailIdp.login(email: email, password: password);
-  } catch (_) {
-    final since = DateTime.now().toUtc().subtract(const Duration(seconds: 2));
-    final requestId = await client.emailIdp.startRegistration(email: email);
-    final code = await _codeFor(email, since);
-    final token = await client.emailIdp.verifyRegistrationCode(
-      accountRequestId: requestId,
-      verificationCode: code,
-    );
-    auth = await client.emailIdp.finishRegistration(
-      registrationToken: token,
-      password: password,
-    );
-  }
-  await manager.updateSignedInUser(auth);
-  return client;
-}
-
-Future<String> _codeFor(String email, DateTime since) async {
-  for (var i = 0; i < 50; i++) {
-    if (await mailbox.exists()) {
-      for (final line in (await mailbox.readAsLines()).reversed) {
-        final m = jsonDecode(line) as Map<String, dynamic>;
-        if (m['email'] == email &&
-            m['kind'] == 'registration' &&
-            DateTime.parse(m['at'] as String).isAfter(since)) {
-          return m['code'] as String;
-        }
-      }
-    }
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-  }
-  throw StateError('No verification code for $email in ${mailbox.path}');
-}
-
-Future<ShopContext> ensureShop(Client c, String shop, String name) async =>
-    await c.shop.myShop() ?? await c.shop.createShop(shop, name);
-
 UuidValue op() => const Uuid().v4obj();
 
 NewJobInput intake(String customer, String model) => NewJobInput(
@@ -137,8 +76,6 @@ List<EstimateLine> lines(List<(String, int)> l) => [
     ),
 ];
 
-String tokenOf(CreatedLink l) => l.url.split('/r/').last;
-
 Future<void> main(List<String> args) async {
   String arg(String name, String fallback) {
     final i = args.indexOf(name);
@@ -152,6 +89,7 @@ Future<void> main(List<String> args) async {
       '../fixwitness_server/.serverpod/development/dev_mailbox.jsonl',
     ),
   );
+  h = Harness(apiUrl: apiUrl, mailbox: mailbox);
   final phase = arg('--phase', 'all');
   final stateFile = File(arg('--state', '.e2e_state.json'));
   final run = DateTime.now().millisecondsSinceEpoch.toString().substring(7);
@@ -161,12 +99,12 @@ Future<void> main(List<String> args) async {
   const pwA = 'E2e-Owner-A-pass1!';
   const pwB = 'E2e-Owner-B-pass1!';
   final ownerEmail = 'e2e.owner.a@example.com';
-  final sessionA1 = await signIn(ownerEmail, pwA);
-  final sessionA2 = await signIn(ownerEmail, pwA);
-  final ownerB = await signIn('e2e.owner.b@example.com', pwB);
+  final sessionA1 = await h.signIn(ownerEmail, pwA);
+  final sessionA2 = await h.signIn(ownerEmail, pwA);
+  final ownerB = await h.signIn('e2e.owner.b@example.com', pwB);
   final shopA = await ensureShop(sessionA1, 'E2E Fix Point', 'Ravi');
   await ensureShop(ownerB, 'E2E Other Shop', 'Kiran');
-  final customer = anonymousClient();
+  final customer = h.anonymousClient();
 
   if (phase == 'after-restart') {
     await _afterRestart(sessionA1, customer, stateFile);

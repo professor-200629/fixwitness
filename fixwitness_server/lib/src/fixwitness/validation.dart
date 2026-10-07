@@ -103,16 +103,37 @@ const maxUnitPriceMinor = 1000000000;
   return (lines: out, totalMinor: total);
 }
 
-/// Formats integer minor units for history text, e.g. `INR 4,500.00`.
+const _symbols = {'INR': '₹', 'USD': r'$', 'EUR': '€', 'GBP': '£'};
+
+/// Formats integer minor units for history text, e.g. `₹4,500.00`. Matches the
+/// app's formatting: INR uses Indian digit grouping (1,23,456.00).
 String formatMoney(int minor, String currency) {
   final negative = minor < 0;
   final abs = minor.abs();
   final whole = (abs ~/ 100).toString();
-  final cents = (abs % 100).toString().padLeft(2, '0');
-  final grouped = StringBuffer();
-  for (var i = 0; i < whole.length; i++) {
-    if (i > 0 && (whole.length - i) % 3 == 0) grouped.write(',');
-    grouped.write(whole[i]);
+  final fraction = (abs % 100).toString().padLeft(2, '0');
+  final grouped = currency == 'INR' ? _groupIndian(whole) : _groupWestern(whole);
+  return '${negative ? '-' : ''}${_symbols[currency] ?? '$currency '}$grouped.$fraction';
+}
+
+String _groupWestern(String digits) {
+  final out = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) out.write(',');
+    out.write(digits[i]);
   }
-  return '${negative ? '-' : ''}$currency $grouped.$cents';
+  return out.toString();
+}
+
+String _groupIndian(String digits) {
+  if (digits.length <= 3) return digits;
+  final last3 = digits.substring(digits.length - 3);
+  var rest = digits.substring(0, digits.length - 3);
+  final parts = <String>[];
+  while (rest.length > 2) {
+    parts.insert(0, rest.substring(rest.length - 2));
+    rest = rest.substring(0, rest.length - 2);
+  }
+  if (rest.isNotEmpty) parts.insert(0, rest);
+  return '${parts.join(',')},$last3';
 }

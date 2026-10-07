@@ -20,7 +20,18 @@ class CustomerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
-      home: CustomerReviewPage(client: client, token: token),
+      // Keep `#/r/<token>` as the route name so the browser URL keeps the
+      // token and a page refresh reopens the same repair.
+      initialRoute: '/r/$token',
+      onGenerateInitialRoutes: (_) => [_route()],
+      onGenerateRoute: (_) => _route(),
+    );
+  }
+
+  Route<void> _route() {
+    return MaterialPageRoute(
+      settings: RouteSettings(name: '/r/$token'),
+      builder: (_) => CustomerReviewPage(client: client, token: token),
     );
   }
 }
