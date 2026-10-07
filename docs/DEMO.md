@@ -58,7 +58,9 @@ dart run bin/demo.dart revise latest     # shop issues v2: + swollen battery ₹
 
 ## 6. Offline capture (Android phone or emulator)
 
-`flutter run -d <device> --dart-define=SERVER_URL=http://<PC-IP>:8080/` (emulator: `10.0.2.2`).
+Start the server with `SERVERPOD_API_SERVER_PUBLIC_HOST` and `SERVERPOD_WEB_SERVER_PUBLIC_HOST` set to
+the PC's LAN IP (photo upload and download URLs use it), then
+`flutter run -d <device> --dart-define=SERVER_URL=http://<PC-IP>:8080/` (emulator: `10.0.2.2` also works).
 
 10. Airplane mode on. *New job* → fill in → *Check in device*. The list shows it as *Waiting to
     send*; the banner says items are saved on the phone.
@@ -68,4 +70,5 @@ dart run bin/demo.dart revise latest     # shop issues v2: + swollen battery ₹
     note, checklist and photo; each turns *Saved on server*. Approvals and estimates are never
     queued: their buttons say they need a connection.
 
-Status of step 6 in this build: see STATUS.md (not yet run on a device).
+Step 6 was run on an Android 16 emulator on 2026-10-07 (gallery photo, not camera); see STATUS.md
+and the screenshots in `docs/evidence/`.

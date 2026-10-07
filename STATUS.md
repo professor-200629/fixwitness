@@ -22,16 +22,17 @@ Design notes: `docs/PLAN.md`. Setup: `README.md`. Demonstration: `docs/DEMO.md`.
 | Outdated approval rejection | e2e + server test: approve v1 after v2 issued; browser: customer page with v1 ticked, shop issues v2, customer presses Approve | PASS — `estimateOutdated` (attempted 1, current 2), nothing recorded, refusal written to history, page reloads to v2 with change summary |
 | Concurrent estimate change and approval | e2e: 10 races over HTTP; server test: 15 races in-process (`approve(v1)` ∥ `issueEstimate(v2)`) | PASS — every outcome is one of the two serial orders; both orders observed (e2e 9/1, server 14/1); history seq contiguous |
 | Duplicate upload retries | e2e: 5 concurrent `createJob` with one op id, retried note, retried photo registration; outbox tests: lost response after save | PASS — one record each |
-| App restart while offline | outbox test: queue captured offline (job + condition + note + photo), SQLite session closed and reopened, then synced; mid-flight `syncing` op recovered on restart | PASS on desktop SQLite. **Not run on an Android device** (see unresolved) |
+| App restart while offline | **Android emulator** (Pixel 7, Android 16/API 36): airplane mode on (server confirmed unreachable from the device); new job + note + condition checklist + gallery photo captured; app force-stopped (process gone); device SQLite pulled and read: 4 pending rows, children linked to the queued job, photo file in `pending_photos/`; relaunched still offline: signed in, shop from cache, "4 item(s) saved on this phone"; airplane mode off: job created on the server as #2 with note, checklist and photo. Also the desktop outbox tests | PASS on device (after the fix below). Screenshots in `docs/evidence/` |
 | Unauthorized job access | e2e + server tests: other shop (get, note, estimate, start, link, photo URL, upload), unauthenticated, signed-in user without shop, link used against another job's estimate, made-up / revoked / expired tokens, shop account calling customer approval | PASS — `notFound` for other shops (existence not revealed), 401 unauthenticated, `forbidden`, `linkInvalid` / `linkRevoked` / `linkExpired`, `shopAccountCannotApprove` |
 | Database persistence after server restart | e2e `before-restart`; server and embedded PostgreSQL killed (postmaster force-stopped); restarted; `after-restart` | PASS — job rowVersion 12, 13 events, 3 estimates (ids, statuses, content hashes) identical; customer link and stored photo bytes (SHA-256) still served |
 | Clear recovery after interrupted photo upload | e2e: bytes uploaded, metadata call skipped → `preparePhotoUpload` answers `alreadyStored`; truncated body refused by storage → `uploadMissing`; wrong bytes → `uploadRejected` and file deleted → fresh upload description. Outbox tests: upload ok + register fails → only registration repeated (1 upload); app killed between the two → resumes at registration | PASS (after fixing a bug the e2e found, below) |
-| Pending / syncing / failed / confirmed states | Browser (web shop app): note added with server stopped → "Waiting to send · No connection to the server"; server restarted → sent and shown on the server. Failed state + reason covered by outbox test | PASS (web). Android UI not observed |
+| Pending / syncing / failed / confirmed states | Android: "Waiting to send", "Sending…", "Saved on server" per item, banner and badge counts; web: same with server stopped/restarted. Failed state + reason covered by outbox test | PASS |
+| Online-only actions offline | Android, airplane mode: "Issue estimate" disabled (`enabled=false` in the UI tree), banner "Offline: showing the copy saved on this phone" | PASS |
 | Money in integer minor units | Server computes totals from lines; editor parses "4,250.50" → 425050 without floating point; UI total ₹4,750.00 exact | PASS |
 | Device passcodes not stored | Notes/fault/checklist text matching passcode patterns refused server-side; "PIN connector loose" allowed | PASS |
 | Secrets not in source control | `passwords.yaml`, demo credentials, web build, e2e artifacts gitignored; `git ls-files` checked | PASS |
 
-Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter test test/outbox_test.dart` **7/7**;
+Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter test test/outbox_test.dart` **8/8**;
 `dart run bin/e2e.dart --phase before-restart` **35/35**, `--phase after-restart` **2/2**;
 `dart analyze` / `flutter analyze`: no issues.
 
@@ -48,16 +49,28 @@ Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter
 4. **Money shown two ways** ("INR 7,700.00" from server text, "₹7,700.00" in the app). Unified.
 5. **Job screen did not refresh when queued evidence was confirmed** (browser). Fixed: it reloads
    when this job's queued items are confirmed.
+6. **A hung request blocked the whole offline queue** (Android emulator). The photo upload URL
+   pointed at the server's configured public host (`localhost`), which on the device is the device
+   itself; the request never answered, the outbox had no timeout, and the item sat on "Sending…"
+   for minutes. Fixed: every outbox call has a timeout (30 s, uploads 2 min) and a timeout is
+   treated as "no connection" (stays pending, retried, safe because of operation ids). New
+   regression test: an upload that never answers. On the device, the stuck item was left marked
+   `syncing` when the process was killed; after installing the fix over the app's data it was reset
+   to pending on start-up and sent (attempts 2), so recovery of an interrupted upload was also
+   observed on the device.
+7. **Development server advertised `localhost`** to devices (upload and photo URLs). For phones and
+   emulators run it with `SERVERPOD_API_SERVER_PUBLIC_HOST` / `SERVERPOD_WEB_SERVER_PUBLIC_HOST` set to
+   the PC's LAN IP (README). In production these are the real domain.
 
 ## Unresolved problems / not verified
 
-- **No on-device Android run.** `flutter build apk --debug --dart-define=SERVER_URL=http://10.0.2.2:8080/`
-  succeeds (173 MB debug APK; the first build took 64 min because Gradle installed NDK 28.2 and
-  SDK Platform 35, whose licences were already accepted on this machine). But no Android device is
-  attached, the only emulator system image here is an incomplete download (empty folder) and
-  `cmdline-tools` is missing, so camera capture, Android file storage and offline behaviour on a
-  phone have not been observed. Build warning to track: `flutter_web_auth_2` (pulled in by the
+- **Android verified on an emulator, not a physical phone.** Emulator: Pixel 7 profile, Android 16
+  (API 36) Google APIs x86_64 image, headless, installed with the Android command-line tools.
+  The photo came from the gallery (a synthetic test image), not the camera app; camera capture
+  itself was not exercised. Build warning to track: `flutter_web_auth_2` (pulled in by the
   Serverpod auth UI) still applies the Kotlin Gradle Plugin, which future Flutter versions reject.
+- The outbox's `attempts` counter also counts offline retries (29 while in airplane mode); it is
+  informational only.
 - **Not deployed publicly.** Serverpod Cloud needs an account created by the owner
   (console.serverpod.dev) and `serverpod cloud launch`; ngrok is installed but has no auth token.
   The demo currently runs on this PC (http://localhost:8082).
@@ -77,6 +90,5 @@ Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter
 
 ## Next step
 
-Decide the deployment target (Serverpod Cloud account, or a temporary tunnel from this PC), then
-run the Android app on a real phone or a fully installed emulator and walk through DEMO.md step 6
-(offline capture, force-stop, reconnect).
+Decide the deployment target (Serverpod Cloud account, or a temporary tunnel from this PC). Then
+repeat DEMO.md step 6 on a physical phone with the camera.

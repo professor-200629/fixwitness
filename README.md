@@ -87,11 +87,20 @@ flutter run -d <device> --dart-define=SERVER_URL=http://10.0.2.2:8080/   # emula
 
 Debug builds allow plain HTTP to a development server; release builds need HTTPS.
 
+Photo upload and download URLs are built from the server's *public host*, which defaults to
+`localhost` in development. A phone or emulator cannot use that, so start the server with your
+PC's LAN IP:
+
+```bash
+# PowerShell: $env:SERVERPOD_API_SERVER_PUBLIC_HOST="192.168.1.20"; $env:SERVERPOD_WEB_SERVER_PUBLIC_HOST="192.168.1.20"
+SERVERPOD_API_SERVER_PUBLIC_HOST=192.168.1.20 SERVERPOD_WEB_SERVER_PUBLIC_HOST=192.168.1.20 dart run bin/main.dart --apply-migrations
+```
+
 ### Tests
 
 ```bash
 cd fixwitness_server && dart test        # 25 integration tests, real server + embedded PostgreSQL
-cd fixwitness_flutter && flutter test    # 7 offline-queue tests on real SQLite
+cd fixwitness_flutter && flutter test    # 8 offline-queue tests on real SQLite
 # with the development server running:
 cd fixwitness_e2e && dart run bin/e2e.dart                   # 35 HTTP end-to-end checks
 dart run bin/e2e.dart --phase before-restart                 # then restart the server and:

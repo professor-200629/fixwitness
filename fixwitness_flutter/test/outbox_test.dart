@@ -18,6 +18,7 @@ class FakeServer implements OutboxApi {
   bool loseNextRegisterResponse = false;
   bool failNextRegisterBeforeWrite = false;
   bool corruptNextUpload = false;
+  bool hangNextUpload = false;
 
   final jobs = <String, RepairJob>{};
   final notes = <String, JobNote>{};
@@ -134,6 +135,11 @@ class FakeServer implements OutboxApi {
   @override
   Future<bool> upload(String uploadDescription, Uint8List bytes) async {
     _net();
+    if (hangNextUpload) {
+      // Like an upload URL the device cannot reach: the request never answers.
+      hangNextUpload = false;
+      return Completer<bool>().future;
+    }
     uploads++;
     final key = uploadDescription.substring('upload:'.length);
     storedBytes[key] = corruptNextUpload ? Uint8List(1) : bytes;
@@ -204,13 +210,18 @@ class AppRun {
   final ClientDatabaseSession session;
   final Outbox outbox;
 
-  static Future<AppRun> start(Directory dir, FakeServer server) async {
+  static Future<AppRun> start(
+    Directory dir,
+    FakeServer server, {
+    Duration uploadTimeout = const Duration(minutes: 2),
+  }) async {
     final client = Client('http://localhost:1/');
     final session = await client.createSession(p.join(dir.path, 'app.db'));
     final outbox = Outbox(
       store: SqliteOutboxStore(session),
       vault: FilePhotoVault(Directory(p.join(dir.path, 'photos'))),
       api: server,
+      uploadTimeout: uploadTimeout,
     );
     await outbox.recoverInterrupted();
     return AppRun._(session, outbox);
@@ -492,6 +503,44 @@ void main() {
       expect(failed.lastError, 'Remove the passcode.');
       await run.outbox.discard(failed);
       expect(await run.outbox.operations(), hasLength(1));
+      await run.kill();
+    },
+  );
+
+  test(
+    'when an upload never answers then it times out, later work still syncs, and the retry succeeds',
+    () async {
+      final run = await AppRun.start(
+        dir,
+        server,
+        uploadTimeout: const Duration(milliseconds: 300),
+      );
+      final job = await server.createJob(
+        UuidValue.fromString('abababab-abab-4bab-8bab-abababababab'),
+        intake(),
+      );
+      await run.outbox.enqueuePhoto(
+        serverJobId: job.id,
+        bytes: jpeg(),
+        contentType: 'image/jpeg',
+        stage: PhotoStage.intake,
+      );
+      server.hangNextUpload = true;
+      final first = await run.outbox.syncOnce().timeout(
+        const Duration(seconds: 10),
+      );
+      expect(
+        first.reachedServer,
+        isFalse,
+        reason: 'a hung request counts as no connection',
+      );
+      var op = (await run.outbox.operations()).single;
+      expect(op.status, OpStatus.pending);
+      expect(op.lastError, 'The server did not answer in time.');
+      await run.outbox.syncOnce();
+      op = (await run.outbox.operations()).single;
+      expect(op.status, OpStatus.confirmed);
+      expect(server.photos, hasLength(1));
       await run.kill();
     },
   );

@@ -60,7 +60,19 @@ class SyncReport {
 /// Estimates, workflow transitions and customer approvals are deliberately
 /// not queued: they need the server's answer at the moment they happen.
 class Outbox {
-  Outbox({required this.store, required this.vault, required this.api});
+  Outbox({
+    required this.store,
+    required this.vault,
+    required this.api,
+    this.callTimeout = const Duration(seconds: 30),
+    this.uploadTimeout = const Duration(minutes: 2),
+  });
+
+  /// A request that has not answered by then is treated as a lost
+  /// connection: the operation stays pending and the queue is not blocked.
+  /// Resending later is safe because the server deduplicates by operation id.
+  final Duration callTimeout;
+  final Duration uploadTimeout;
 
   final OutboxStore store;
   final PhotoVault vault;
@@ -301,27 +313,33 @@ class Outbox {
     final payload = jsonDecode(op.payloadJson) as Map<String, dynamic>;
     switch (op.kind) {
       case OpKind.createJob:
-        final job = await api.createJob(op.opId, NewJobInput.fromJson(payload));
+        final job = await api
+            .createJob(op.opId, NewJobInput.fromJson(payload))
+            .timeout(callTimeout);
         return op.copyWith(resultId: job.id, serverJobId: job.id);
       case OpKind.addNote:
-        final note = await api.addNote(
-          op.serverJobId!,
-          op.opId,
-          payload['text'] as String,
-          payload['customerVisible'] as bool,
-          DateTime.parse(payload['writtenAt'] as String),
-        );
+        final note = await api
+            .addNote(
+              op.serverJobId!,
+              op.opId,
+              payload['text'] as String,
+              payload['customerVisible'] as bool,
+              DateTime.parse(payload['writtenAt'] as String),
+            )
+            .timeout(callTimeout);
         return op.copyWith(resultId: note.id);
       case OpKind.saveCondition:
-        final report = await api.saveCondition(
-          op.serverJobId!,
-          op.opId,
-          [
-            for (final i in payload['items'] as List)
-              ConditionItem.fromJson(i as Map<String, dynamic>),
-          ],
-          DateTime.parse(payload['capturedAt'] as String),
-        );
+        final report = await api
+            .saveCondition(
+              op.serverJobId!,
+              op.opId,
+              [
+                for (final i in payload['items'] as List)
+                  ConditionItem.fromJson(i as Map<String, dynamic>),
+              ],
+              DateTime.parse(payload['capturedAt'] as String),
+            )
+            .timeout(callTimeout);
         return op.copyWith(resultId: report.id);
       case OpKind.addPhoto:
         return _sendPhoto(op, payload);
@@ -346,28 +364,34 @@ class Outbox {
           message: 'The photo file is no longer on this device. Take it again.',
         );
       }
-      final ticket = await api.preparePhotoUpload(
-        jobId,
-        op.opId,
-        contentType,
-        bytes.length,
-      );
+      final ticket = await api
+          .preparePhotoUpload(
+            jobId,
+            op.opId,
+            contentType,
+            bytes.length,
+          )
+          .timeout(callTimeout);
       if (!ticket.alreadyStored) {
-        final ok = await api.upload(ticket.uploadDescription!, bytes);
+        final ok = await api
+            .upload(ticket.uploadDescription!, bytes)
+            .timeout(uploadTimeout);
         if (!ok) throw const _UploadInterrupted();
       }
       op = await _save(op.copyWith(uploadDone: true));
     }
     try {
-      final photo = await api.registerPhoto(
-        jobId,
-        op.opId,
-        contentType,
-        payload['sha256'] as String,
-        PhotoStage.values.byName(payload['stage'] as String),
-        payload['caption'] as String?,
-        DateTime.parse(payload['capturedAt'] as String),
-      );
+      final photo = await api
+          .registerPhoto(
+            jobId,
+            op.opId,
+            contentType,
+            payload['sha256'] as String,
+            PhotoStage.values.byName(payload['stage'] as String),
+            payload['caption'] as String?,
+            DateTime.parse(payload['capturedAt'] as String),
+          )
+          .timeout(callTimeout);
       return op.copyWith(resultId: photo.id);
     } on FwException catch (e) {
       if (e.code == FwErrorCode.uploadMissing ||
