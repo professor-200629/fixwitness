@@ -27,3 +27,6 @@ fixwitness_server/web/app/
 fixwitness_e2e/.e2e_state.json
 fixwitness_e2e/e2e_report*.json
 fixwitness_e2e/.demo_env.local
+
+# ngrok auth token (local only)
+deploy/ngrok-auth.local.yml

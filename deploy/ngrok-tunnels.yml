@@ -1,0 +1,10 @@
+# Temporary public demo through ngrok. No secrets here: the auth token lives in
+# deploy/ngrok-auth.local.yml (gitignored).
+# One tunnel to the one-origin proxy (deploy/one-origin-proxy.js, port 8088),
+# which routes API calls to 8080 and the web app to 8082. Insights (8081) and
+# the database stay private.
+version: 3
+tunnels:
+  fixwitness:
+    proto: http
+    addr: 8088

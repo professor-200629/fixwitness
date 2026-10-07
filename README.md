@@ -110,6 +110,23 @@ dart run bin/e2e.dart --phase after-restart                  # persistence check
 Stop the development server before `dart test` on Windows: the running server holds a native
 SQLite DLL that the test runner needs to replace.
 
+## Temporary public demo (ngrok, from this PC)
+
+ngrok's free plan gives one domain, so a small proxy puts the API and the web app on one origin:
+
+```bash
+ngrok config add-authtoken <token> --config deploy/ngrok-auth.local.yml   # once; file is gitignored
+node deploy/one-origin-proxy.js                                           # :8088 -> api :8080 / web :8082
+# start the server with the public domain so photo and customer-link URLs use it:
+#   SERVERPOD_API_SERVER_PUBLIC_HOST / _PORT=443 / _SCHEME=https, and the same for WEB_SERVER
+ngrok start --all --config deploy/ngrok-auth.local.yml --config deploy/ngrok-tunnels.yml
+cd fixwitness_flutter && flutter build apk --debug --dart-define=SERVER_URL=https://<domain>/
+```
+
+Browsers see ngrok's warning page once (it shows the host's IP address); the Android app does not.
+The link works only while this PC runs the server, proxy and tunnel. Insights and the database are
+not exposed. The server still runs in development mode: sign-up codes go to the dev mailbox file.
+
 ## Deploying
 
 The supported path is Serverpod Cloud (`serverpod cloud launch` from the project root after
