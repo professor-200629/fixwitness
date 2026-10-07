@@ -26,3 +26,4 @@ fixwitness_server/web/app/
 # e2e run artifacts
 fixwitness_e2e/.e2e_state.json
 fixwitness_e2e/e2e_report*.json
+fixwitness_e2e/.demo_env.local

@@ -35,13 +35,18 @@ Future<void> main(List<String> args) async {
   final shop = await h.signIn(demoEmail, password);
   await ensureShop(shop, 'Fix Point Mobiles', 'Ravi');
 
+  // `latest` stands for the most recently updated job of the demo shop.
+  Future<int> jobArg() async => args.length > 1 && args[1] != 'latest'
+      ? int.parse(args[1])
+      : (await shop.jobs.list()).first.id;
+
   switch (args.firstOrNull) {
     case 'seed':
       await _seed(shop);
     case 'revise':
-      await _revise(shop, int.parse(args[1]));
+      await _revise(shop, await jobArg());
     case 'status':
-      final d = await shop.jobs.get(int.parse(args[1]));
+      final d = await shop.jobs.get(await jobArg());
       stdout.writeln(
         '#${d.job.jobNumber} ${d.job.status.name} · ${d.authorization.label}',
       );
@@ -49,7 +54,9 @@ Future<void> main(List<String> args) async {
         stdout.writeln('  ${e.seq}. ${e.summary}');
       }
     default:
-      stderr.writeln('usage: demo.dart seed | revise <jobId> | status <jobId>');
+      stderr.writeln(
+        'usage: demo.dart seed | revise <jobId|latest> | status <jobId|latest>',
+      );
       exit(2);
   }
   exit(0);
@@ -188,5 +195,6 @@ Future<void> _revise(Client shop, int jobId) async {
     current?.note,
     'Battery is swollen and pressing on the new screen; it must be replaced for the screen to sit flush.',
   );
-  stdout.writeln('Issued v${next.versionNumber}: ${d.authorization.label}');
+  final after = await shop.jobs.get(jobId);
+  stdout.writeln('Issued v${next.versionNumber}. ${after.authorization.label}');
 }

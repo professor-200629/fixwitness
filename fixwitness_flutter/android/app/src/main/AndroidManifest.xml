@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Talks to the FixWitness server. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <application
-        android:label="fixwitness_flutter"
+        android:label="FixWitness"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

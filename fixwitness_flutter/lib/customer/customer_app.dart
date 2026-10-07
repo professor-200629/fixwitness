@@ -472,9 +472,19 @@ class _CustomerReviewPageState extends State<CustomerReviewPage> {
         );
       }
     } on FwException catch (err) {
-      // The server explains exactly why (e.g. a newer version was issued);
-      // reload so the customer sees what is current now.
-      setState(() => _notice = err.message);
+      // The server explains exactly why; reload so the customer sees what is
+      // current now. A replaced version is phrased here in local terms.
+      final replaced = err.code == FwErrorCode.estimateOutdated &&
+          err.currentVersion != null &&
+          err.currentVersion != err.attemptedVersion;
+      setState(
+        () => _notice = replaced
+            ? 'You were looking at version ${err.attemptedVersion}, but the shop '
+                  'has since issued version ${err.currentVersion}. Your decision '
+                  'was not recorded. Please review version ${err.currentVersion} '
+                  'below.'
+            : err.message,
+      );
     } catch (err) {
       setState(
         () => _notice =

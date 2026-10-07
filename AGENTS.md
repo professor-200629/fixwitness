@@ -47,4 +47,21 @@ If the user asks you to test the app:
 
 The app is launched from `fixwitness_flutter/lib/driver.dart`, which starts the Flutter driver extension with text entry emulation turned off so the app stays usable by hand. To let the driver type, set `enableTextEntryEmulation: true` there and `hot_restart` the app.
 
-IMPORTANT: After building the first version of the app, update this AGENTS.md file with information about the app we're building. KEEP the info about the MCP server and the checklist. Remove this paragraph.
+## About this app: FixWitness
+
+A repair workflow for independent phone-repair shops. Read `README.md`, `docs/PLAN.md` and
+`STATUS.md` before changing behaviour.
+
+- Server rules live in `fixwitness_server/lib/src/fixwitness/` (workflow transitions, estimate
+  hashing, authorization label, link tokens, validation) and the endpoints in
+  `fixwitness_server/lib/src/endpoints/`. Every state change locks the job row
+  (`LockMode.forUpdate`) in a transaction and appends a `JobEvent` in the same transaction via
+  `appendEvent` + `saveJob`. Keep that pattern.
+- Issued estimates are immutable; a change is a new version. Customer approval must reference
+  `estimateId`, `versionNumber` and `contentHash`. Shop accounts must never be able to record a
+  customer decision.
+- Money is integer minor units everywhere. Never use `double` for prices.
+- Offline capture (`fixwitness_flutter/lib/sync/`) only queues create job / note / condition /
+  photo. Estimates, transitions and approvals are online-only on purpose.
+- Every queued operation carries a UUID; server methods that accept one must stay idempotent.
+- `fixwitness_e2e` drives a running dev server over HTTP; keep `bin/e2e.dart` passing.
