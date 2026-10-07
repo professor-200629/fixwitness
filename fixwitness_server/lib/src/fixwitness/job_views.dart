@@ -3,7 +3,11 @@ import 'package:serverpod/serverpod.dart';
 import '../generated/protocol.dart';
 import 'workflow.dart';
 
-Future<JobDetail> buildJobDetail(Session session, RepairJob job, Shop shop) async {
+Future<JobDetail> buildJobDetail(
+  Session session,
+  RepairJob job,
+  Shop shop,
+) async {
   final jobId = job.id!;
   final estimates = await Estimate.db.find(
     session,

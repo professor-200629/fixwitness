@@ -1,0 +1,17 @@
+name: fixwitness_e2e
+description: End-to-end checks that drive a running FixWitness server over HTTP with real generated clients.
+publish_to: none
+
+environment:
+  sdk: '^3.12.2'
+
+resolution: workspace
+
+dependencies:
+  fixwitness_client:
+    path: ../fixwitness_client
+  serverpod_auth_idp_client: 4.0.4
+  serverpod_client: 4.0.4
+  serverpod_auth_core_client: 4.0.4
+  crypto: ^3.0.6
+

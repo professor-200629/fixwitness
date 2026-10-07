@@ -14,8 +14,7 @@ String newLinkToken() {
   return base64Url.encode(bytes).replaceAll('=', '');
 }
 
-String hashToken(String token) =>
-    sha256.convert(utf8.encode(token)).toString();
+String hashToken(String token) => sha256.convert(utf8.encode(token)).toString();
 
 /// Public URL of the customer review page for [token].
 String customerUrl(Session session, String token) {
@@ -54,7 +53,8 @@ Future<CustomerLink> resolveLink(
   if (link.expiresAt.isBefore(DateTime.now().toUtc())) {
     throw FwException(
       code: FwErrorCode.linkExpired,
-      message: 'This link expired on ${link.expiresAt.toIso8601String().substring(0, 10)}. '
+      message:
+          'This link expired on ${link.expiresAt.toIso8601String().substring(0, 10)}. '
           'Ask the shop to send a new one.',
     );
   }
@@ -63,7 +63,8 @@ Future<CustomerLink> resolveLink(
 
 FwException _invalidLink() => FwException(
   code: FwErrorCode.linkInvalid,
-  message: 'This link is not valid. Check that you opened the full link the shop sent.',
+  message:
+      'This link is not valid. Check that you opened the full link the shop sent.',
 );
 
 /// Caller network details for the approval audit trail.
@@ -71,11 +72,14 @@ FwException _invalidLink() => FwException(
   if (session is! MethodCallSession) return (ip: null, userAgent: null);
   final request = session.request;
   final forwarded = request.headers['x-forwarded-for']?.firstOrNull;
-  final ip = forwarded?.split(',').first.trim() ??
+  final ip =
+      forwarded?.split(',').first.trim() ??
       request.connectionInfo.remote.address.toString();
   final agent = request.headers.userAgent;
   return (
     ip: ip,
-    userAgent: agent == null || agent.length <= 300 ? agent : agent.substring(0, 300),
+    userAgent: agent == null || agent.length <= 300
+        ? agent
+        : agent.substring(0, 300),
   );
 }

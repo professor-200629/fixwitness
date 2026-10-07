@@ -64,7 +64,11 @@ class JobsEndpoint extends Endpoint {
       deviceMake: requireText(input.deviceMake, 'Device make', max: 60),
       deviceModel: requireText(input.deviceModel, 'Device model', max: 60),
       deviceSerial: optionalText(input.deviceSerial, 'IMEI / serial', max: 40),
-      reportedFault: requireText(input.reportedFault, 'Reported fault', max: 1000),
+      reportedFault: requireText(
+        input.reportedFault,
+        'Reported fault',
+        max: 1000,
+      ),
       accessories: optionalText(input.accessories, 'Accessories', max: 200),
     );
 
@@ -108,7 +112,8 @@ class JobsEndpoint extends Endpoint {
           type: JobEventType.jobCreated,
           actorKind: ActorKind.shop,
           actorLabel: ctx.member.displayName,
-          summary: 'Device checked in: ${deviceLabel(job)}. '
+          summary:
+              'Device checked in: ${deviceLabel(job)}. '
               'Reported fault: ${job.reportedFault}',
         );
         return RepairJob.db.updateRow(session, job, transaction: tx);
@@ -310,7 +315,11 @@ class JobsEndpoint extends Endpoint {
     final ctx = await requireMember(session);
     final normalised = normaliseLines(lines);
     final cleanNote = optionalText(note, 'Estimate note', max: 500);
-    final reason = optionalText(reasonForRevision, 'Reason for revision', max: 300);
+    final reason = optionalText(
+      reasonForRevision,
+      'Reason for revision',
+      max: 300,
+    );
     final currency = ctx.shop.currency;
 
     return session.db.transaction((tx) async {
@@ -321,7 +330,11 @@ class JobsEndpoint extends Endpoint {
         transaction: tx,
         lock: true,
       );
-      requireTransition(job.status, JobStatus.awaitingApproval, 'issue an estimate');
+      requireTransition(
+        job.status,
+        JobStatus.awaitingApproval,
+        'issue an estimate',
+      );
       final previous = job.currentEstimateId == null
           ? null
           : await Estimate.db.findById(
@@ -332,7 +345,8 @@ class JobsEndpoint extends Endpoint {
       if (previous?.versionNumber != basedOnVersion) {
         throw FwException(
           code: FwErrorCode.estimateOutdated,
-          message: 'Estimate v${previous?.versionNumber} was issued after you '
+          message:
+              'Estimate v${previous?.versionNumber} was issued after you '
               'opened this job. Reload and review it before issuing another version.',
           attemptedVersion: basedOnVersion,
           currentVersion: previous?.versionNumber,
@@ -358,7 +372,8 @@ class JobsEndpoint extends Endpoint {
           type: JobEventType.estimateSuperseded,
           actorKind: ActorKind.system,
           actorLabel: 'FixWitness',
-          summary: 'Estimate v${previous.versionNumber} was replaced by '
+          summary:
+              'Estimate v${previous.versionNumber} was replaced by '
               'v$version before the customer decided.',
           estimateVersion: previous.versionNumber,
         );
@@ -395,7 +410,8 @@ class JobsEndpoint extends Endpoint {
         type: JobEventType.estimateIssued,
         actorKind: ActorKind.shop,
         actorLabel: ctx.member.displayName,
-        summary: 'Estimate v$version issued: '
+        summary:
+            'Estimate v$version issued: '
             '${formatMoney(estimate.totalMinor, currency)}'
             '${reason == null ? '' : '. Reason: $reason'}',
         estimateVersion: version,
@@ -429,7 +445,8 @@ class JobsEndpoint extends Endpoint {
         to: JobStatus.completed,
         action: 'mark the repair complete',
         type: JobEventType.repairCompleted,
-        summary: (v) => 'Repair completed under estimate v$v. Ready for collection.',
+        summary: (v) =>
+            'Repair completed under estimate v$v. Ready for collection.',
       );
 
   Future<RepairJob> _authorizedTransition(
@@ -452,7 +469,11 @@ class JobsEndpoint extends Endpoint {
       requireTransition(job.status, to, action);
       final current = job.currentEstimateId == null
           ? null
-          : await Estimate.db.findById(session, job.currentEstimateId!, transaction: tx);
+          : await Estimate.db.findById(
+              session,
+              job.currentEstimateId!,
+              transaction: tx,
+            );
       requireAuthorizedWork(job, current, action);
       final authorized = (await Estimate.db.findById(
         session,
@@ -504,7 +525,8 @@ class JobsEndpoint extends Endpoint {
         type: JobEventType.collectionAcknowledged,
         actorKind: ActorKind.shop,
         actorLabel: ctx.member.displayName,
-        summary: 'Device handed over to $who. Recorded by shop staff '
+        summary:
+            'Device handed over to $who. Recorded by shop staff '
             '(${ctx.member.displayName}), not confirmed on the customer link.',
       );
       return saveJob(

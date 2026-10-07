@@ -8,4 +8,5 @@ workspace:
   - fixwitness_client
   - fixwitness_server
   - fixwitness_flutter
+  - fixwitness_e2e
 

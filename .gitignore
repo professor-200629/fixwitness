@@ -17,3 +17,8 @@ pubspec_overrides.yaml
 
 # Serverpod Cloud CLI
 .scloud/
+
+# Local demo credentials (never commit)
+.demo-accounts.local
+# Flutter web build copied into the server
+fixwitness_server/web/app/

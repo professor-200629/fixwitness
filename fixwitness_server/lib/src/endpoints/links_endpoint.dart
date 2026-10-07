@@ -58,7 +58,11 @@ class LinksEndpoint extends Endpoint {
   Future<CustomerLink> revoke(Session session, int linkId) async {
     final ctx = await requireMember(session);
     return session.db.transaction((tx) async {
-      final link = await CustomerLink.db.findById(session, linkId, transaction: tx);
+      final link = await CustomerLink.db.findById(
+        session,
+        linkId,
+        transaction: tx,
+      );
       if (link == null) throw notFound('Link not found.');
       var job = await loadShopJob(
         session,

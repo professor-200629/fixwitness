@@ -48,7 +48,11 @@ Future<({int shopA, int shopB})> seedShops(
   TestSessionBuilder sb,
   TestEndpoints endpoints,
 ) async {
-  final a = await endpoints.shop.createShop(as(sb, ownerA), 'Fix Point', 'Ravi');
+  final a = await endpoints.shop.createShop(
+    as(sb, ownerA),
+    'Fix Point',
+    'Ravi',
+  );
   await ShopMember.db.insertRow(
     sb.build(),
     ShopMember(
@@ -58,7 +62,11 @@ Future<({int shopA, int shopB})> seedShops(
       role: ShopRole.technician,
     ),
   );
-  final b = await endpoints.shop.createShop(as(sb, ownerB), 'Other Shop', 'Kiran');
+  final b = await endpoints.shop.createShop(
+    as(sb, ownerB),
+    'Other Shop',
+    'Kiran',
+  );
   return (shopA: a.shop.id!, shopB: b.shop.id!);
 }
 

@@ -51,7 +51,9 @@ void requireTransition(JobStatus from, JobStatus to, String action) {
 /// for the customer. Work must not continue on unapproved changes.
 void requireAuthorizedWork(RepairJob job, Estimate? current, String action) {
   if (job.authorizedEstimateId == null) {
-    throw badTransition('Cannot $action: the customer has not approved an estimate.');
+    throw badTransition(
+      'Cannot $action: the customer has not approved an estimate.',
+    );
   }
   if (current != null && current.status == EstimateStatus.issued) {
     throw badTransition(
@@ -103,19 +105,24 @@ AuthorizationState authorizationFor(
   if (latest == null) {
     label = 'No estimate issued yet. No work is authorized.';
   } else if (pending && authorized == null) {
-    label = 'Estimate v${latest.versionNumber} (${money(latest)}) is waiting '
+    label =
+        'Estimate v${latest.versionNumber} (${money(latest)}) is waiting '
         'for customer approval. No work is authorized yet.';
   } else if (pending) {
-    label = 'Revised estimate v${latest.versionNumber} (${money(latest)}) is '
+    label =
+        'Revised estimate v${latest.versionNumber} (${money(latest)}) is '
         'waiting for approval. Only the work in v${authorized!.versionNumber} '
         '(${money(authorized)}) is authorized.';
   } else if (latest.status == EstimateStatus.declined && authorized != null) {
-    label = 'The customer declined v${latest.versionNumber}. Only the work in '
+    label =
+        'The customer declined v${latest.versionNumber}. Only the work in '
         'v${authorized.versionNumber} (${money(authorized)}) is authorized.';
   } else if (latest.status == EstimateStatus.declined) {
-    label = 'The customer declined v${latest.versionNumber}. No work is authorized.';
+    label =
+        'The customer declined v${latest.versionNumber}. No work is authorized.';
   } else {
-    label = 'The customer approved v${authorized!.versionNumber} '
+    label =
+        'The customer approved v${authorized!.versionNumber} '
         '(${money(authorized)}). This work is authorized.';
   }
   return AuthorizationState(

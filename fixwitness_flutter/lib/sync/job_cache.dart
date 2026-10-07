@@ -23,7 +23,8 @@ class SqliteJobCache implements JobCache {
     final now = DateTime.now().toUtc();
     await session.db.transaction((tx) async {
       final existing = {
-        for (final c in await CachedJob.db.find(session, transaction: tx)) c.serverJobId: c,
+        for (final c in await CachedJob.db.find(session, transaction: tx))
+          c.serverJobId: c,
       };
       for (final j in jobs) {
         final row = existing.remove(j.id);
@@ -31,13 +32,22 @@ class SqliteJobCache implements JobCache {
         if (row == null) {
           await CachedJob.db.insertRow(
             session,
-            CachedJob(serverJobId: j.id, jobNumber: j.jobNumber, summaryJson: json, cachedAt: now),
+            CachedJob(
+              serverJobId: j.id,
+              jobNumber: j.jobNumber,
+              summaryJson: json,
+              cachedAt: now,
+            ),
             transaction: tx,
           );
         } else {
           await CachedJob.db.updateRow(
             session,
-            row.copyWith(summaryJson: json, jobNumber: j.jobNumber, cachedAt: now),
+            row.copyWith(
+              summaryJson: json,
+              jobNumber: j.jobNumber,
+              cachedAt: now,
+            ),
             transaction: tx,
           );
         }
@@ -59,7 +69,10 @@ class SqliteJobCache implements JobCache {
   @override
   Future<void> putDetail(JobDetail detail) async {
     final id = detail.job.id!;
-    final row = await CachedJob.db.findFirstRow(session, where: (t) => t.serverJobId.equals(id));
+    final row = await CachedJob.db.findFirstRow(
+      session,
+      where: (t) => t.serverJobId.equals(id),
+    );
     final now = DateTime.now().toUtc();
     final json = jsonEncode(detail.toJson());
     if (row == null) {
@@ -74,20 +87,31 @@ class SqliteJobCache implements JobCache {
         ),
       );
     } else {
-      await CachedJob.db.updateRow(session, row.copyWith(detailJson: json, cachedAt: now));
+      await CachedJob.db.updateRow(
+        session,
+        row.copyWith(detailJson: json, cachedAt: now),
+      );
     }
   }
 
   @override
   Future<JobDetail?> detail(int jobId) async {
-    final row = await CachedJob.db.findFirstRow(session, where: (t) => t.serverJobId.equals(jobId));
+    final row = await CachedJob.db.findFirstRow(
+      session,
+      where: (t) => t.serverJobId.equals(jobId),
+    );
     if (row?.detailJson == null) return null;
-    return JobDetail.fromJson(jsonDecode(row!.detailJson!) as Map<String, dynamic>);
+    return JobDetail.fromJson(
+      jsonDecode(row!.detailJson!) as Map<String, dynamic>,
+    );
   }
 
   @override
   Future<DateTime?> cachedAt() async {
-    final row = await CachedJob.db.findFirstRow(session, orderBy: (t) => t.cachedAt.desc());
+    final row = await CachedJob.db.findFirstRow(
+      session,
+      orderBy: (t) => t.cachedAt.desc(),
+    );
     return row?.cachedAt;
   }
 }

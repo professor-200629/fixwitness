@@ -80,7 +80,9 @@ class ClientOutboxApi implements OutboxApi {
 
   @override
   Future<bool> upload(String uploadDescription, Uint8List bytes) =>
-      FileUploader(uploadDescription).uploadByteData(ByteData.sublistView(bytes));
+      FileUploader(
+        uploadDescription,
+      ).uploadByteData(ByteData.sublistView(bytes));
 
   @override
   Future<EvidencePhoto> registerPhoto(

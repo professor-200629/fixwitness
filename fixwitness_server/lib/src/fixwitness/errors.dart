@@ -17,4 +17,5 @@ FwException badTransition(String message) =>
 /// True when [error] is Postgres rejecting a duplicate key. Used to make
 /// operation-id inserts idempotent when two retries race each other.
 bool isUniqueViolation(Object error) =>
-    error is DatabaseQueryException && error.code == PgErrorCode.uniqueViolation;
+    error is DatabaseQueryException &&
+    error.code == PgErrorCode.uniqueViolation;

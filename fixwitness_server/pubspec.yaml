@@ -62,4 +62,4 @@ serverpod:
       path: ../fixwitness_flutter
       displayName: "Fixwitness app"
       auto_launch: true
-      target: lib/driver.dart
+      target: lib/main.dart

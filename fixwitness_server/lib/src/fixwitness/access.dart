@@ -14,7 +14,9 @@ Future<ShopContext> requireMember(Session session) async {
     where: (t) => t.authUserId.equals(auth.authUserId),
   );
   if (member == null) {
-    throw forbidden('This account is not part of a shop yet. Create your shop first.');
+    throw forbidden(
+      'This account is not part of a shop yet. Create your shop first.',
+    );
   }
   final shop = await Shop.db.findById(session, member.shopId);
   if (shop == null) throw forbidden('Your shop no longer exists.');

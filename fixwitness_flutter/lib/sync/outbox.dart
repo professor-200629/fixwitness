@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:fixwitness_client/fixwitness_client.dart';
-import 'package:uuid/uuid.dart';
 
 import 'outbox_api.dart';
 import 'outbox_store.dart';
@@ -77,13 +76,17 @@ class Outbox {
   Future<List<PendingOperation>> operations() => store.all();
 
   /// Operations that belong to [serverJobId] (or to the queued job [jobOpId]).
-  Future<List<PendingOperation>> forJob({int? serverJobId, UuidValue? jobOpId}) async {
+  Future<List<PendingOperation>> forJob({
+    int? serverJobId,
+    UuidValue? jobOpId,
+  }) async {
     final all = await store.all();
     return all
         .where(
           (o) =>
               (serverJobId != null && o.serverJobId == serverJobId) ||
-              (jobOpId != null && (o.parentOpId == jobOpId || o.opId == jobOpId)),
+              (jobOpId != null &&
+                  (o.parentOpId == jobOpId || o.opId == jobOpId)),
         )
         .toList();
   }
@@ -217,9 +220,11 @@ class Outbox {
     if (_syncing) return _running!.future;
     _syncing = true;
     _running = Completer<SyncReport>();
-    _run().then(_running!.complete, onError: _running!.completeError).whenComplete(
-      () => _syncing = false,
-    );
+    _run()
+        .then(_running!.complete, onError: _running!.completeError)
+        .whenComplete(
+          () => _syncing = false,
+        );
     return _running!.future;
   }
 
@@ -239,10 +244,12 @@ class Outbox {
           op = await _save(op.copyWith(serverJobId: parent!.resultId));
         } else {
           if (parent == null || parent.status == OpStatus.failed) {
-            await _save(op.copyWith(
-              status: OpStatus.failed,
-              lastError: 'The job this belongs to could not be created.',
-            ));
+            await _save(
+              op.copyWith(
+                status: OpStatus.failed,
+                lastError: 'The job this belongs to could not be created.',
+              ),
+            );
             report.failed++;
           } else {
             report.stillPending++;
@@ -251,13 +258,17 @@ class Outbox {
         }
       }
 
-      op = await _save(op.copyWith(
-        status: OpStatus.syncing,
-        attempts: op.attempts + 1,
-      ));
+      op = await _save(
+        op.copyWith(
+          status: OpStatus.syncing,
+          attempts: op.attempts + 1,
+        ),
+      );
       try {
         op = await _send(op);
-        op = await _save(op.copyWith(status: OpStatus.confirmed, lastError: null));
+        op = await _save(
+          op.copyWith(status: OpStatus.confirmed, lastError: null),
+        );
         byOpId[op.opId.uuid] = op;
         if (op.localFilePath != null) await vault.delete(op.localFilePath!);
         report.confirmed++;
@@ -265,10 +276,14 @@ class Outbox {
         // _send may have persisted progress (uploadDone); build on that copy.
         op = await _reload(op);
         if (classify(e) == FailureKind.permanent) {
-          await _save(op.copyWith(status: OpStatus.failed, lastError: describe(e)));
+          await _save(
+            op.copyWith(status: OpStatus.failed, lastError: describe(e)),
+          );
           report.failed++;
         } else {
-          await _save(op.copyWith(status: OpStatus.pending, lastError: describe(e)));
+          await _save(
+            op.copyWith(status: OpStatus.pending, lastError: describe(e)),
+          );
           report.stillPending++;
           report.reachedServer = false;
           // Offline: leave the rest queued and in order.
@@ -331,7 +346,12 @@ class Outbox {
           message: 'The photo file is no longer on this device. Take it again.',
         );
       }
-      final ticket = await api.preparePhotoUpload(jobId, op.opId, contentType, bytes.length);
+      final ticket = await api.preparePhotoUpload(
+        jobId,
+        op.opId,
+        contentType,
+        bytes.length,
+      );
       if (!ticket.alreadyStored) {
         final ok = await api.upload(ticket.uploadDescription!, bytes);
         if (!ok) throw const _UploadInterrupted();
@@ -350,7 +370,8 @@ class Outbox {
       );
       return op.copyWith(resultId: photo.id);
     } on FwException catch (e) {
-      if (e.code == FwErrorCode.uploadMissing || e.code == FwErrorCode.uploadRejected) {
+      if (e.code == FwErrorCode.uploadMissing ||
+          e.code == FwErrorCode.uploadRejected) {
         await _save(op.copyWith(uploadDone: false));
         // Retry the whole upload on the next pass instead of failing for good.
         throw _UploadInterrupted(e.message);
@@ -363,7 +384,9 @@ class Outbox {
       (await store.all()).firstWhere((o) => o.id == op.id, orElse: () => op);
 
   Future<PendingOperation> _save(PendingOperation op) async {
-    final saved = await store.update(op.copyWith(updatedAt: DateTime.now().toUtc()));
+    final saved = await store.update(
+      op.copyWith(updatedAt: DateTime.now().toUtc()),
+    );
     _changes.add(null);
     return saved;
   }
@@ -372,7 +395,9 @@ class Outbox {
 }
 
 class _UploadInterrupted implements Exception {
-  const _UploadInterrupted([this.message = 'The photo upload was interrupted.']);
+  const _UploadInterrupted([
+    this.message = 'The photo upload was interrupted.',
+  ]);
 
   final String message;
 

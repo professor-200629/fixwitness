@@ -27,7 +27,9 @@ class CustomerEndpoint extends Endpoint {
       where: (t) => t.jobId.equals(jobId),
       orderBy: (t) => t.versionNumber,
     );
-    final current = estimates.where((e) => e.id == job.currentEstimateId).firstOrNull;
+    final current = estimates
+        .where((e) => e.id == job.currentEstimateId)
+        .firstOrNull;
     final photos = await EvidencePhoto.db.find(
       session,
       where: (t) => t.jobId.equals(jobId) & t.customerVisible.equals(true),
@@ -82,7 +84,8 @@ class CustomerEndpoint extends Endpoint {
         orderBy: (t) => t.seq,
       ),
       linkExpiresAt: link.expiresAt,
-      canDecide: job.status == JobStatus.awaitingApproval &&
+      canDecide:
+          job.status == JobStatus.awaitingApproval &&
           current?.status == EstimateStatus.issued,
       canAcknowledgeCollection:
           job.status == JobStatus.completed || job.status == JobStatus.declined,
@@ -177,7 +180,8 @@ class CustomerEndpoint extends Endpoint {
         if (estimate.contentHash != contentHash) {
           throw FwException(
             code: FwErrorCode.estimateOutdated,
-            message: 'The estimate on your screen does not match version '
+            message:
+                'The estimate on your screen does not match version '
                 '${estimate.versionNumber} on record. Reload the page and review '
                 'it again. Nothing was recorded.',
             attemptedVersion: versionNumber,
@@ -211,7 +215,9 @@ class CustomerEndpoint extends Endpoint {
         await Estimate.db.updateRow(
           session,
           estimate.copyWith(
-            status: approved ? EstimateStatus.approved : EstimateStatus.declined,
+            status: approved
+                ? EstimateStatus.approved
+                : EstimateStatus.declined,
             decidedAt: now,
           ),
           transaction: tx,
@@ -294,7 +300,8 @@ class CustomerEndpoint extends Endpoint {
     if (session.isUserSignedIn) {
       throw FwException(
         code: FwErrorCode.shopAccountCannotApprove,
-        message: 'You are signed in to a FixWitness shop account. Only the '
+        message:
+            'You are signed in to a FixWitness shop account. Only the '
             'customer can decide on an estimate or confirm collection, from '
             'their own link.',
       );
@@ -303,7 +310,8 @@ class CustomerEndpoint extends Endpoint {
 
   FwException _outdated(int attempted, Estimate current) => FwException(
     code: FwErrorCode.estimateOutdated,
-    message: 'You were looking at estimate v$attempted, but the shop issued '
+    message:
+        'You were looking at estimate v$attempted, but the shop issued '
         'v${current.versionNumber} on ${_day(current.issuedAt)} '
         '(${formatMoney(current.totalMinor, current.currency)}). Your decision '
         'was not recorded. Review v${current.versionNumber} and decide on it.',
@@ -336,7 +344,8 @@ class CustomerEndpoint extends Endpoint {
           type: JobEventType.approvalRejected,
           actorKind: ActorKind.system,
           actorLabel: 'FixWitness',
-          summary: 'A decision on v$attemptedVersion was refused: '
+          summary:
+              'A decision on v$attemptedVersion was refused: '
               '${refusal.currentVersion == attemptedVersion ? 'the content had changed' : 'v${refusal.currentVersion} is the current version'}.',
           estimateVersion: attemptedVersion,
         );
@@ -349,7 +358,11 @@ class CustomerEndpoint extends Endpoint {
 
   String _day(DateTime? t) {
     if (t == null) return 'an earlier date';
-    final iso = t.toUtc().toIso8601String().substring(0, 16).replaceFirst('T', ' ');
+    final iso = t
+        .toUtc()
+        .toIso8601String()
+        .substring(0, 16)
+        .replaceFirst('T', ' ');
     return '$iso UTC';
   }
 }

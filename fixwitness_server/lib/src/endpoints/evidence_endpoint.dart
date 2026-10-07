@@ -37,11 +37,16 @@ class EvidenceEndpoint extends Endpoint {
     if (sizeBytes < 1 || sizeBytes > maxPhotoBytes) {
       throw FwException(
         code: FwErrorCode.uploadRejected,
-        message: 'Photos must be smaller than ${maxPhotoBytes ~/ (1024 * 1024)} MB.',
+        message:
+            'Photos must be smaller than ${maxPhotoBytes ~/ (1024 * 1024)} MB.',
       );
     }
     final existing = await _photoForOp(session, opId, jobId);
     final path = _path(ctx.shop.id!, jobId, opId, ext);
+    // Storage only reports an upload as existing once it is verified. Verify
+    // here so bytes that arrived before a failed registerPhoto call are
+    // recognised instead of being uploaded a second time.
+    await session.storage.verifyUpload(storageId: _storage, path: path);
     if (existing != null ||
         await session.storage.fileExists(storageId: _storage, path: path)) {
       return PhotoUploadTicket(alreadyStored: true, maxBytes: maxPhotoBytes);
@@ -86,11 +91,18 @@ class EvidenceEndpoint extends Endpoint {
     if (!await session.storage.fileExists(storageId: _storage, path: path)) {
       throw FwException(
         code: FwErrorCode.uploadMissing,
-        message: 'The photo has not reached the server yet. It will be uploaded again.',
+        message:
+            'The photo has not reached the server yet. It will be uploaded again.',
       );
     }
-    final bytes = await session.storage.retrieveFile(storageId: _storage, path: path);
-    final data = bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
+    final bytes = await session.storage.retrieveFile(
+      storageId: _storage,
+      path: path,
+    );
+    final data = bytes.buffer.asUint8List(
+      bytes.offsetInBytes,
+      bytes.lengthInBytes,
+    );
     final problem = _checkImage(data, contentType, sha256Hex);
     if (problem != null) {
       await session.storage.deleteFile(storageId: _storage, path: path);
@@ -131,7 +143,8 @@ class EvidenceEndpoint extends Endpoint {
           type: JobEventType.photoAdded,
           actorKind: ActorKind.shop,
           actorLabel: ctx.member.displayName,
-          summary: '${_stageLabel(stage)} photo added'
+          summary:
+              '${_stageLabel(stage)} photo added'
               '${cleanCaption == null ? '' : ': $cleanCaption'}.',
         );
         await saveJob(session, tx, job);
@@ -196,10 +209,17 @@ class EvidenceEndpoint extends Endpoint {
     if (data.isEmpty || data.length > maxPhotoBytes) {
       return 'The stored photo has an invalid size; it will be uploaded again.';
     }
-    final isJpeg = data.length > 3 &&
-        data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF;
-    final isPng = data.length > 8 &&
-        data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47;
+    final isJpeg =
+        data.length > 3 &&
+        data[0] == 0xFF &&
+        data[1] == 0xD8 &&
+        data[2] == 0xFF;
+    final isPng =
+        data.length > 8 &&
+        data[0] == 0x89 &&
+        data[1] == 0x50 &&
+        data[2] == 0x4E &&
+        data[3] == 0x47;
     if ((contentType == 'image/jpeg' && !isJpeg) ||
         (contentType == 'image/png' && !isPng)) {
       return 'The file is not a valid ${_allowedTypes[contentType]!.toUpperCase()} image.';
