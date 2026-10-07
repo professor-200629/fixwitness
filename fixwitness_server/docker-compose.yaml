@@ -1,0 +1,30 @@
+services:
+  # Development services
+  postgres:
+    image: ghcr.io/serverpod/postgres:16
+    ports:
+      - "8090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: fixwitness
+      POSTGRES_PASSWORD: "kG5P4lmru6mk8HFJb9PJt1gQDTkE7NU5"
+    volumes:
+      - fixwitness_data:/var/lib/postgresql/data
+
+
+  # Test services
+  postgres_test:
+    image: ghcr.io/serverpod/postgres:16
+    ports:
+      - "9090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: fixwitness_test
+      POSTGRES_PASSWORD: "Y8LxalHafP8qCv1mjP_ZXsrpbE5r-985"
+    volumes:
+      - fixwitness_test_data:/var/lib/postgresql/data
+
+
+volumes:
+  fixwitness_data:
+  fixwitness_test_data:
