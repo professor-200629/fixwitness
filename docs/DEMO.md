@@ -62,11 +62,15 @@ Start the server with `SERVERPOD_API_SERVER_PUBLIC_HOST` and `SERVERPOD_WEB_SERV
 the PC's LAN IP (photo upload and download URLs use it), then
 `flutter run -d <device> --dart-define=SERVER_URL=http://<PC-IP>:8080/` (emulator: `10.0.2.2` also works).
 
-10. Airplane mode on. *New job* → fill in → *Check in device*. The list shows it as *Waiting to
+> **PC on the phone's hotspot?** Don't use airplane mode: it takes the PC (server, tunnel) offline
+> too. Cut only FixWitness's network instead: `.\deploypp-network.ps1 off` (and `on` afterwards).
+> It uses Android 13+'s per-app firewall over USB; the phone and hotspot stay online.
+
+10. Airplane mode on (or `app-network.ps1 off`). *New job* → fill in → *Check in device*. The list shows it as *Waiting to
     send*; the banner says items are saved on the phone.
 11. Open it → *Evidence* → take a photo, save a checklist, add a note. Each shows *Waiting to send*.
 12. Swipe the app away (force stop) and reopen: the queue is still there (SQLite on the device).
-13. Airplane mode off. Within ~15 s (or *Send now* in the sync queue) the job is created, then its
+13. Airplane mode off (or `app-network.ps1 on`). Within ~15 s (or *Send now* in the sync queue) the job is created, then its
     note, checklist and photo; each turns *Saved on server*. Approvals and estimates are never
     queued: their buttons say they need a connection.
 

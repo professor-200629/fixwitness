@@ -26,6 +26,7 @@ Design notes: `docs/PLAN.md`. Setup: `README.md`. Demonstration: `docs/DEMO.md`.
 | Unauthorized job access | e2e + server tests: other shop (get, note, estimate, start, link, photo URL, upload), unauthenticated, signed-in user without shop, link used against another job's estimate, made-up / revoked / expired tokens, shop account calling customer approval | PASS — `notFound` for other shops (existence not revealed), 401 unauthenticated, `forbidden`, `linkInvalid` / `linkRevoked` / `linkExpired`, `shopAccountCannotApprove` |
 | Database persistence after server restart | e2e `before-restart`; server and embedded PostgreSQL killed (postmaster force-stopped); restarted; `after-restart` | PASS — job rowVersion 12, 13 events, 3 estimates (ids, statuses, content hashes) identical; customer link and stored photo bytes (SHA-256) still served |
 | Clear recovery after interrupted photo upload | e2e: bytes uploaded, metadata call skipped → `preparePhotoUpload` answers `alreadyStored`; truncated body refused by storage → `uploadMissing`; wrong bytes → `uploadRejected` and file deleted → fresh upload description. Outbox tests: upload ok + register fails → only registration repeated (1 upload); app killed between the two → resumes at registration | PASS (after fixing a bug the e2e found, below) |
+| Offline on a **physical phone** (2026-10-11) | Samsung SM-A366E, Android 16, over the public ngrok link. The PC uses this phone's hotspot, so instead of airplane mode only FixWitness was cut off (`deploy/app-network.ps1 off`, Android per-app firewall) while phone, hotspot and PC stayed online. Note + condition checklist captured offline ("Waiting to send · No connection to the server"); app force-stopped and relaunched still blocked ("Offline. 2 item(s) saved on this phone"); network restored at 12:21:05; server logged JWT refresh (token had expired over 4 days) then `addNote` and `saveCondition` at 12:21:15. Earlier (10-07) on the same phone: sign-up, shop creation, check-in, rear-camera photo upload verified server-side | PASS |
 | Pending / syncing / failed / confirmed states | Android: "Waiting to send", "Sending…", "Saved on server" per item, banner and badge counts; web: same with server stopped/restarted. Failed state + reason covered by outbox test | PASS |
 | Online-only actions offline | Android, airplane mode: "Issue estimate" disabled (`enabled=false` in the UI tree), banner "Offline: showing the copy saved on this phone" | PASS |
 | Money in integer minor units | Server computes totals from lines; editor parses "4,250.50" → 425050 without floating point; UI total ₹4,750.00 exact | PASS |
@@ -64,7 +65,8 @@ Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter
 
 ## Unresolved problems / not verified
 
-- **Android verified on an emulator, not a physical phone.** Emulator: Pixel 7 profile, Android 16
+- **Android verified on an emulator and on a physical phone** (camera photo and offline queue on
+  a Samsung SM-A366E). Earlier note kept for history: Emulator: Pixel 7 profile, Android 16
   (API 36) Google APIs x86_64 image, headless, installed with the Android command-line tools.
   The photo came from the gallery (a synthetic test image), not the camera app; camera capture
   itself was not exercised. Build warning to track: `flutter_web_auth_2` (pulled in by the
