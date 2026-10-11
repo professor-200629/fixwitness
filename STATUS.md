@@ -66,11 +66,11 @@ Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter
 
 ## Data state (2026-10-11)
 
-Test data removed from the development database with `deploy/cleanup-test-data.sql` (one
+Test data removed from the development database with a one-off SQL script (one
 transaction, after a `pg_dump` backup that was itself deleted afterwards at the owner's request):
 - 4 test accounts and their shops with all jobs, estimates, decisions, links, notes, checklists,
   photo records and history (ravi.fixpoint@, e2e.owner.a@, e2e.owner.b@, demo.shop@example.com);
-- the TEST JOB #1 in the real shop "Electric shop" (account kept; job numbering reset to #1);
+- the TEST JOB #1 in the owner's real shop (account kept; job numbering reset to #1);
 - 5 stored photo files and pending upload/download grants; development request logs.
 Verified afterwards: 1 account, 1 shop, 0 jobs/estimates/photos/notes/events/stored files.
 Also cleared: the phone's sent-item receipts (new "Clear sent items" action), the dev mailbox file,
