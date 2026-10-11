@@ -297,3 +297,30 @@ void showError(BuildContext context, Object error) {
     SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
   );
 }
+
+/// Announces a change the customer just made on their link (live update).
+void showLiveChange(BuildContext context, JobChange change) {
+  final c = Theme.of(context).colorScheme;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: c.primaryContainer,
+      duration: const Duration(seconds: 6),
+      content: Row(
+        children: [
+          Icon(
+            Icons.notifications_active_outlined,
+            color: c.onPrimaryContainer,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Job #${change.jobNumber}: ${change.summary}',
+              style: TextStyle(color: c.onPrimaryContainer),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}

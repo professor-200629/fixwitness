@@ -207,15 +207,17 @@ class _CreateShopScreen extends StatefulWidget {
 class _CreateShopScreenState extends State<_CreateShopScreen> {
   final _shop = TextEditingController();
   final _name = TextEditingController();
+  final _code = TextEditingController();
   bool _busy = false;
+  bool _joining = false;
 
   Future<void> _submit() async {
     setState(() => _busy = true);
     try {
-      final ctx = await widget.services.client.shop.createShop(
-        _shop.text,
-        _name.text,
-      );
+      final shop = widget.services.client.shop;
+      final ctx = _joining
+          ? await shop.joinShop(_code.text, _name.text)
+          : await shop.createShop(_shop.text, _name.text);
       widget.onCreated(ctx);
     } catch (e) {
       if (mounted) showError(context, e);
@@ -227,19 +229,49 @@ class _CreateShopScreenState extends State<_CreateShopScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Set up your shop')),
+      appBar: AppBar(title: const Text('Set up FixWitness')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text(
-            'Your shop name appears on every estimate and customer link.',
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(
+                value: false,
+                icon: Icon(Icons.storefront_outlined),
+                label: Text('New shop'),
+              ),
+              ButtonSegment(
+                value: true,
+                icon: Icon(Icons.group_add_outlined),
+                label: Text('Join with a code'),
+              ),
+            ],
+            selected: {_joining},
+            onSelectionChanged: (v) => setState(() => _joining = v.first),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            _joining
+                ? 'Enter the invite code the shop owner gave you.'
+                : 'Your shop name appears on every estimate and customer link.',
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _shop,
-            decoration: const InputDecoration(labelText: 'Shop name'),
-            textInputAction: TextInputAction.next,
-          ),
+          if (_joining)
+            TextField(
+              controller: _code,
+              decoration: const InputDecoration(
+                labelText: 'Invite code',
+                hintText: 'ABCD-EFGH',
+              ),
+              textCapitalization: TextCapitalization.characters,
+              textInputAction: TextInputAction.next,
+            )
+          else
+            TextField(
+              controller: _shop,
+              decoration: const InputDecoration(labelText: 'Shop name'),
+              textInputAction: TextInputAction.next,
+            ),
           const SizedBox(height: 12),
           TextField(
             controller: _name,
@@ -250,7 +282,13 @@ class _CreateShopScreenState extends State<_CreateShopScreen> {
           const SizedBox(height: 20),
           FilledButton(
             onPressed: _busy ? null : _submit,
-            child: Text(_busy ? 'Creating…' : 'Create shop'),
+            child: Text(
+              _busy
+                  ? 'Please wait…'
+                  : _joining
+                  ? 'Join shop'
+                  : 'Create shop',
+            ),
           ),
         ],
       ),

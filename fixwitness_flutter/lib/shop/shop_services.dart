@@ -37,6 +37,15 @@ class ShopServices extends ChangeNotifier {
   Timer? _timer;
   StreamSubscription<void>? _sub;
 
+  /// Live changes pushed by the server (another device, or the customer on
+  /// their link). Screens listen to this and reload what they show.
+  Stream<JobChange> get liveChanges => _live.stream;
+  final _live = StreamController<JobChange>.broadcast();
+  StreamSubscription<JobChange>? _liveSub;
+  Timer? _liveRetry;
+  var _liveBackoff = const Duration(seconds: 2);
+  bool _disposed = false;
+
   int get pendingCount => operations
       .where(
         (o) => o.status == OpStatus.pending || o.status == OpStatus.syncing,
@@ -46,10 +55,41 @@ class ShopServices extends ChangeNotifier {
       operations.where((o) => o.status == OpStatus.failed).length;
 
   void start() {
+    if (_timer != null) return; // already running
     _sub = outbox.changes.listen((_) => _reloadOps());
     _reloadOps();
     _timer = Timer.periodic(const Duration(seconds: 15), (_) => syncNow());
     syncNow();
+    _connectLive();
+  }
+
+  /// Keeps one `shop.watch()` stream open, reopening it with backoff after a
+  /// drop (offline, server restart). Missing a message is harmless: screens
+  /// also reload on open and on pull-to-refresh.
+  void _connectLive() {
+    if (_disposed) return;
+    _liveRetry?.cancel();
+    _liveSub?.cancel();
+    _liveSub = client.shop.watch().listen(
+      (change) {
+        _liveBackoff = const Duration(seconds: 2);
+        _setConnection(Connection.online);
+        _live.add(change);
+      },
+      onError: (Object _) => _scheduleLiveReconnect(),
+      onDone: _scheduleLiveReconnect,
+      cancelOnError: true,
+    );
+  }
+
+  void _scheduleLiveReconnect() {
+    if (_disposed) return;
+    _liveRetry?.cancel();
+    _liveRetry = Timer(_liveBackoff, _connectLive);
+    final next = _liveBackoff * 2;
+    _liveBackoff = next > const Duration(minutes: 1)
+        ? const Duration(minutes: 1)
+        : next;
   }
 
   Future<void> _reloadOps() async {
@@ -94,7 +134,12 @@ class ShopServices extends ChangeNotifier {
     if (connection == c) return;
     connection = c;
     notifyListeners();
-    if (c == Connection.online) unawaited(outbox.syncOnce());
+    if (c == Connection.online) {
+      unawaited(outbox.syncOnce());
+      // Back online: reopen the live stream now instead of waiting out the
+      // backoff.
+      if (_liveRetry?.isActive ?? false) _connectLive();
+    }
   }
 
   Future<ShopContext?> cachedShop() async {
@@ -110,8 +155,12 @@ class ShopServices extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _timer?.cancel();
     _sub?.cancel();
+    _liveRetry?.cancel();
+    _liveSub?.cancel();
+    _live.close();
     super.dispose();
   }
 }

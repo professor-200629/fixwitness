@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:fixwitness_client/fixwitness_client.dart';
@@ -8,6 +9,7 @@ import '../common/format.dart';
 import '../common/widgets.dart';
 import '../sync/outbox.dart';
 import 'job_screen.dart';
+import 'invite.dart';
 import 'new_job_screen.dart';
 import 'shop_services.dart';
 import 'sync_queue_screen.dart';
@@ -34,13 +36,27 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     s.addListener(_servicesChanged);
+    _liveSub = s.liveChanges.listen(_onLiveChange);
     _refresh();
+  }
+
+  StreamSubscription<JobChange>? _liveSub;
+
+  void _onLiveChange(JobChange change) {
+    _refresh();
+    // Only the visible screen announces it, so it is not shown twice.
+    if (change.fromCustomer &&
+        mounted &&
+        (ModalRoute.of(context)?.isCurrent ?? false)) {
+      showLiveChange(context, change);
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     s.removeListener(_servicesChanged);
+    _liveSub?.cancel();
     super.dispose();
   }
 
@@ -122,6 +138,7 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
           ),
           PopupMenuButton<String>(
             onSelected: (v) async {
+              if (v == 'invite') await showInviteDialog(context, s);
               if (v == 'signout') {
                 await s.rememberShop(null);
                 await s.client.auth.signOutDevice();
@@ -130,8 +147,16 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
             itemBuilder: (_) => [
               PopupMenuItem(
                 enabled: false,
-                child: Text('Signed in as ${widget.shop.member.displayName}'),
+                child: Text(
+                  'Signed in as ${widget.shop.member.displayName}'
+                  '${widget.shop.member.role == ShopRole.owner ? ' (owner)' : ' (technician)'}',
+                ),
               ),
+              if (widget.shop.member.role == ShopRole.owner)
+                const PopupMenuItem(
+                  value: 'invite',
+                  child: Text('Invite a technician'),
+                ),
               const PopupMenuItem(value: 'signout', child: Text('Sign out')),
             ],
           ),

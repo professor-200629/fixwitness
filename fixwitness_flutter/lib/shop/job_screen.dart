@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:fixwitness_client/fixwitness_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../common/format.dart';
 import '../common/widgets.dart';
@@ -50,12 +53,20 @@ class _JobScreenState extends State<JobScreen> {
           .map((o) => o.opId.uuid),
     );
     s.addListener(_servicesChanged);
+    _liveSub = s.liveChanges.listen((change) {
+      if (change.jobId != _jobId || !mounted) return;
+      _load();
+      if (change.fromCustomer) showLiveChange(context, change);
+    });
     _load();
   }
+
+  StreamSubscription<JobChange>? _liveSub;
 
   @override
   void dispose() {
     s.removeListener(_servicesChanged);
+    _liveSub?.cancel();
     super.dispose();
   }
 
@@ -902,76 +913,116 @@ class _LinkSheetState extends State<_LinkSheet> {
         20,
         20 + MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Customer review link',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'The customer uses this link to see the condition record and photos, '
-            'approve or decline the exact estimate, and confirm collection. It '
-            'opens only this job. Anyone with the link can use it, so send it '
-            'only to the customer.',
-          ),
-          const SizedBox(height: 12),
-          if (_url != null) ...[
-            SelectableText(
-              _url!,
-              style: const TextStyle(fontFamily: 'monospace'),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Customer review link',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            FilledButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: _url!));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Link copied. Paste it into your message to the customer.',
+            const Text(
+              'The customer uses this link to see the condition record and photos, '
+              'approve or decline the exact estimate, and confirm collection. It '
+              'opens only this job. Anyone with the link can use it, so send it '
+              'only to the customer.',
+            ),
+            const SizedBox(height: 12),
+            if (_url != null) ...[
+              // At the counter the customer scans this with their phone camera;
+              // remotely, Share sends it through any messaging app.
+              Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: QrImageView(
+                    data: _url!,
+                    size: 220,
+                    backgroundColor: Colors.white,
+                    errorCorrectionLevel: QrErrorCorrectLevel.M,
+                    semanticsLabel: 'QR code of the customer link',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Ask the customer to scan this with their phone camera.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => SharePlus.instance.share(
+                        ShareParams(
+                          text:
+                              'Your ${widget.detail.job.deviceMake} '
+                              '${widget.detail.job.deviceModel} repair: see the '
+                              'condition record and approve the estimate here: '
+                              '$_url',
+                          subject: 'Your repair record',
+                        ),
+                      ),
+                      icon: const Icon(Icons.share_outlined),
+                      label: const Text('Share'),
                     ),
                   ),
-                );
-              },
-              icon: const Icon(Icons.copy),
-              label: const Text('Copy link'),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'This is the only time the full link is shown.',
-              style: TextStyle(fontSize: 12),
-            ),
-          ] else
-            FilledButton.icon(
-              onPressed: _busy ? null : _create,
-              icon: const Icon(Icons.add_link),
-              label: const Text('Create link (valid 7 days)'),
-            ),
-          if (_links.isNotEmpty) ...[
-            const SectionTitle('Links for this job'),
-            for (final l in _links.reversed)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text('Created ${when(l.createdAt)}'),
-                subtitle: Text(
-                  l.revokedAt != null
-                      ? 'Revoked ${when(l.revokedAt!)}'
-                      : l.expiresAt.isBefore(now)
-                      ? 'Expired ${when(l.expiresAt)}'
-                      : 'Active until ${when(l.expiresAt)}'
-                            '${l.lastOpenedAt == null ? ' · not opened yet' : ' · opened ${when(l.lastOpenedAt!)}'}',
-                ),
-                trailing: l.revokedAt == null && l.expiresAt.isAfter(now)
-                    ? TextButton(
-                        onPressed: () => _revoke(l),
-                        child: const Text('Revoke'),
-                      )
-                    : null,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: _url!));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Link copied.')),
+                        );
+                      },
+                      icon: const Icon(Icons.copy),
+                      label: const Text('Copy'),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 4),
+              const Text(
+                'This is the only time the full link is shown.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ] else
+              FilledButton.icon(
+                onPressed: _busy ? null : _create,
+                icon: const Icon(Icons.add_link),
+                label: const Text('Create link (valid 7 days)'),
+              ),
+            if (_links.isNotEmpty) ...[
+              const SectionTitle('Links for this job'),
+              for (final l in _links.reversed)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('Created ${when(l.createdAt)}'),
+                  subtitle: Text(
+                    l.revokedAt != null
+                        ? 'Revoked ${when(l.revokedAt!)}'
+                        : l.expiresAt.isBefore(now)
+                        ? 'Expired ${when(l.expiresAt)}'
+                        : 'Active until ${when(l.expiresAt)}'
+                              '${l.lastOpenedAt == null ? ' · not opened yet' : ' · opened ${when(l.lastOpenedAt!)}'}',
+                  ),
+                  trailing: l.revokedAt == null && l.expiresAt.isAfter(now)
+                      ? TextButton(
+                          onPressed: () => _revoke(l),
+                          child: const Text('Revoke'),
+                        )
+                      : null,
+                ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
