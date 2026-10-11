@@ -1,6 +1,6 @@
 # FixWitness — project status
 
-_Last updated 2026-10-07._
+_Last updated 2026-10-11._
 
 ## Completed
 
@@ -8,9 +8,10 @@ _Last updated 2026-10-07._
 |---|---|
 | Tooling | Flutter 3.47.6, Serverpod CLI 4.0.4, project from `serverpod create` with the official Serverpod agent skills and MCP config. Docs read from docs.serverpod.dev (`llms.txt`) for 4.0.4. |
 | 1. Online workflow | Server models + endpoints for shops, jobs, condition checklists, photos, notes, versioned estimates, customer links, decisions, collection, history. Shop app (Android/web) and customer review page (web) on the generated client. |
-| 2. Correctness | 25 server integration tests (real server + embedded PostgreSQL), 35-check HTTP end-to-end harness (`fixwitness_e2e`). |
+| 2. Correctness | 33 server integration tests (real server + embedded PostgreSQL), 35-check HTTP end-to-end harness (`fixwitness_e2e`). |
 | 3. Offline | Durable outbox + job cache on Serverpod client-side SQLite (`database: client`, stable feature; experimental `database: sync` not used). 7 tests on real SQLite. |
 | 4. Customer UX / history | Progress bar, server-written authorization statement, "changed since vN" diff, exact-version approval with typed name, collection confirmation, full history on both sides, localised outdated-approval message, token kept in the URL so refresh works. |
+| 5. Shop team + live (2026-10-11) | Live job updates over a Serverpod streaming endpoint fed by server events (`shop.watch()`); customer approvals show at the counter at once. Technician invites (single-use, 24 h, hashed codes) and "Join with a code" at sign-up. QR code + Share for customer links. Hourly recurring future call that deletes never-registered photo bytes. App identity `com.fixwitness.app` and icon. |
 
 Design notes: `docs/PLAN.md`. Setup: `README.md`. Demonstration: `docs/DEMO.md`.
 
@@ -32,10 +33,13 @@ Design notes: `docs/PLAN.md`. Setup: `README.md`. Demonstration: `docs/DEMO.md`.
 | Online-only actions offline | Android, airplane mode: "Issue estimate" disabled (`enabled=false` in the UI tree), banner "Offline: showing the copy saved on this phone" | PASS |
 | Money in integer minor units | Server computes totals from lines; editor parses "4,250.50" → 425050 without floating point; UI total ₹4,750.00 exact | PASS |
 | Device passcodes not stored | Notes/fault/checklist text matching passcode patterns refused server-side; "PIN connector loose" allowed | PASS |
+| Live updates reach only the right shop | e2e over HTTP + websocket: a second signed-in device of the shop received "Customer approved estimate v1." 25 ms after the customer's approve call; another shop's stream received nothing. Web app (2026-10-11): customer approvals sent from another tab and from the API turned the row to "Approved" with no reload and showed "Job #4: Customer approved estimate v1.". Server test: a technician's `shop.watch()` stream receives "Customer approved estimate v1." (marked as a customer action) and "Note added by Ravi." in order; a job created by another shop is not received | PASS |
+| Technician invites | Web app: owner menu → "Invite a technician" showed a code with its 24 h expiry; a second account chose "Join with a code", typed it in lower case and landed on the shop's job list as a technician, whose menu has no invite option. e2e: join, technician sees the shop's jobs, technician cannot invite. Server tests: join with the owner's code (case-insensitive) gives a technician who can open the shop's jobs; second use, expired and made-up codes refused (`inviteInvalid`); technicians cannot invite; a member of one shop cannot join another | PASS |
+| Orphan photo bytes cleaned up | Server test: an upload never registered is deleted by the sweep once its grant is past the grace period; registered evidence in the same job is kept; young grants untouched | PASS |
 | Secrets not in source control | `passwords.yaml`, demo credentials, web build, e2e artifacts gitignored; `git ls-files` checked | PASS |
 
-Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter test` **11/11** (offline queue + job cache);
-`dart run bin/e2e.dart --phase before-restart` **35/35**, `--phase after-restart` **2/2**;
+Commands and counts from the last runs: `dart test` (server) **33/33**; `flutter test` **11/11** (offline queue + job cache);
+`dart run bin/e2e.dart` **42/42** (2026-10-11, includes live updates and invites; run against a throwaway database, dropped afterwards); earlier `--phase before-restart` **35/35**, `--phase after-restart` **2/2**;
 `dart analyze` / `flutter analyze`: no issues.
 
 ### Bugs found by verification and fixed
@@ -109,12 +113,10 @@ after 24 h. Both have tests (`test/job_cache_test.dart`, `outbox_test.dart`).
   could still approve; the audit trail is the only control for that.
 - **Web shop app queue is in memory** (lost on reload). Offline capture is an Android feature;
   the web build says so in the sync queue.
-- **Unverified uploads are not garbage-collected.** Bytes uploaded but never registered expire with
-  their upload entry in database storage; on S3/GCS they would remain. A cleanup job is not built.
 - Production configuration (domain, TLS, external PostgreSQL, object storage, email provider) is
   documented but not set up.
-- One staff member per account; inviting technicians to a shop has no UI yet (the model supports
-  `technician` members; tests insert one directly).
+- Live updates, invites and the QR/Share sheet were exercised in the web app, not yet on the
+  Android build.
 
 ## Next step
 

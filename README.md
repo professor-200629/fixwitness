@@ -4,15 +4,27 @@ Repair records an independent phone-repair shop and its customers can both trust
 
 - **Shop app** (Flutter, Android; also runs in a browser for the counter PC): check in a device,
   record its condition with a checklist and photos (works offline), issue estimates, track the
-  repair, hand the device back.
-- **Customer review page** (Flutter web, served by the server): one link per job. The customer
-  sees the condition record and photos, approves or declines the *exact* estimate version, sees
-  what changed in a revision, and confirms collection.
+  repair, hand the device back. Changes from the customer or a colleague appear on every shop
+  device as they happen. The owner invites technicians with a one-time code.
+- **Customer review page** (Flutter web, served by the server): one link per job, handed over as
+  a QR code at the counter or shared to WhatsApp/SMS. The customer sees the condition record and
+  photos, approves or declines the *exact* estimate version, sees what changed in a revision,
+  and confirms collection.
 - **Server** (Serverpod 4.0.4, PostgreSQL): validates every transition, stores immutable
   estimate versions, writes history in the same transaction as each change, deduplicates
   retried operations, and keeps evidence in private storage.
 
-No payments, inventory, messaging integrations, automatic diagnosis or pricing. No AI features.
+No payments, inventory, messaging integrations, automatic diagnosis or pricing. No AI features
+in the product (how AI was used to build it: [AI_DISCLOSURE.md](AI_DISCLOSURE.md)).
+
+## Why
+
+In a small repair shop the arguments are always the same: "the screen wasn't cracked when I gave
+it to you", "I never agreed to ₹4,000", "you said it would be ₹3,200". FixWitness keeps a record
+neither side can quietly change. The condition is written down with photos at check-in. The
+customer approves one exact estimate version, identified by a content hash, from their own phone,
+so an approval of v1 can never be counted as an approval of v2. Every step goes into a history
+that both the shop and the customer can read.
 
 ## Repository layout
 
@@ -24,6 +36,21 @@ fixwitness_e2e/      Scripts that drive a running server over HTTP (e2e checks, 
 docs/                PLAN.md (design), DEMO.md (demonstration script)
 STATUS.md            What is done, what was verified and how, open problems, next step
 ```
+
+## How FixWitness uses Serverpod
+
+| Serverpod feature | Used for | Where |
+|---|---|---|
+| Models + relations (`.spy.yaml`), migrations | 12 server tables (shops, members, jobs, immutable estimate versions, decisions, customer links, condition reports, photos, notes, history, invites, upload grants) and 2 on-device tables | `fixwitness_server/lib/src/models`, `migrations/` |
+| Transactions with row locks (`LockMode.forUpdate`) | Approve-vs-revise races resolve to one serial order; history written in the same transaction | `lib/src/endpoints/*`, `lib/src/fixwitness/workflow.dart` |
+| Server events + streaming endpoint | `shop.watch()` streams job changes to every device of the shop; the customer's approval appears at the counter at once | `lib/src/fixwitness/live.dart`, `shop_endpoint.dart` |
+| Future calls (recurring) | Hourly sweep of photo bytes that were uploaded but never registered as evidence | `lib/src/fixwitness/maintenance.dart`, `lib/server.dart` |
+| Cloud storage (private) + direct upload descriptions + `verifyUpload` | Evidence photos never pass through the API; interrupted uploads are recognised and resumed | `evidence_endpoint.dart` |
+| Client-side database (`database: client`) | The Android offline outbox and job cache are Serverpod models in on-device SQLite | `cached_job.spy.yaml`, `pending_operation.spy.yaml`, `fixwitness_flutter/lib/sync` |
+| Auth (email identity provider, JWT) | Shop accounts; customers never sign in, they use a hashed, expiring, revocable link | `lib/server.dart`, `lib/src/fixwitness/links.dart` |
+| Web server (Relic routes + middleware) | Serves the Flutter web app with a gzip/ETag middleware for phones on mobile data | `lib/src/web/precompressed.dart` |
+| Test tools (`withServerpod`) + embedded PostgreSQL | 33 integration tests on a real server and database, no Docker | `fixwitness_server/test/integration` |
+| Serverpod Cloud | Hosting, database, storage and sign-up email for the public demo | see "Deploying" |
 
 ## Setup (Windows, macOS or Linux)
 
@@ -101,10 +128,10 @@ SERVERPOD_API_SERVER_PUBLIC_HOST=192.168.1.20 SERVERPOD_WEB_SERVER_PUBLIC_HOST=1
 ### Tests
 
 ```bash
-cd fixwitness_server && dart test        # 25 integration tests, real server + embedded PostgreSQL
-cd fixwitness_flutter && flutter test    # 8 offline-queue tests on real SQLite
+cd fixwitness_server && dart test        # 33 integration tests, real server + embedded PostgreSQL
+cd fixwitness_flutter && flutter test    # 11 offline-queue and cache tests on real SQLite
 # with the development server running:
-cd fixwitness_e2e && dart run bin/e2e.dart                   # 35 HTTP end-to-end checks
+cd fixwitness_e2e && dart run bin/e2e.dart                   # 42 HTTP + websocket end-to-end checks
 dart run bin/e2e.dart --phase before-restart                 # then restart the server and:
 dart run bin/e2e.dart --phase after-restart                  # persistence check
 ```

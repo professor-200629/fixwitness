@@ -480,6 +480,84 @@ Future<void> main(List<String> args) async {
     '$consistent/$races consistent; approval committed first in $approvalsWon, revision first in ${races - approvalsWon}',
   );
 
+  // 5b. Live updates over the websocket, and technician invites.
+  final liveJob = await sessionA1.jobs.create(
+    op(),
+    intake('Live $run', 'Pixel 7'),
+  );
+  final liveV1 = await sessionA1.jobs.issueEstimate(
+    liveJob.id!,
+    null,
+    lines([('Battery', 180000)]),
+    null,
+    null,
+  );
+  final liveToken = tokenOf(await sessionA1.links.create(liveJob.id!, 1));
+  final heard = <JobChange>[];
+  final otherShopHeard = <JobChange>[];
+  final watchA = sessionA2.shop.watch().listen(heard.add);
+  final watchB = ownerB.shop.watch().listen(otherShopHeard.add);
+  await Future<void>.delayed(const Duration(seconds: 2));
+  final approvedAt = DateTime.now();
+  await customer.customer.approve(
+    liveToken,
+    liveV1.id!,
+    1,
+    liveV1.contentHash,
+    'Live $run',
+  );
+  final deadline = DateTime.now().add(const Duration(seconds: 10));
+  while (!heard.any((c) => c.jobId == liveJob.id && c.fromCustomer) &&
+      DateTime.now().isBefore(deadline)) {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+  final approvalHeard = heard
+      .where((c) => c.jobId == liveJob.id && c.fromCustomer)
+      .firstOrNull;
+  check(
+    'another shop device hears the customer approval over the websocket',
+    approvalHeard?.summary == 'Customer approved estimate v1.',
+    approvalHeard == null
+        ? 'nothing received in 10 s (${heard.length} other changes)'
+        : '"${approvalHeard.summary}" after '
+              '${DateTime.now().difference(approvedAt).inMilliseconds} ms',
+  );
+  check(
+    'a different shop hears nothing about it',
+    !otherShopHeard.any((c) => c.jobId == liveJob.id),
+  );
+  await watchA.cancel();
+  await watchB.cancel();
+
+  final tech = await h.signIn('e2e.tech.a@example.com', 'E2e-Tech-A-pass1!');
+  final techShop = await tech.shop.myShop();
+  if (techShop == null) {
+    final invite = await sessionA1.shop.createInvite();
+    final joined = await tech.shop.joinShop(invite.code.toLowerCase(), 'Meena');
+    check(
+      'a new account joins the shop with the owner\'s invite code',
+      joined.shop.id == shopA.shop.id &&
+          joined.member.role == ShopRole.technician,
+      'role ${joined.member.role.name}',
+    );
+  } else {
+    check(
+      'the invited technician is still a member of the shop',
+      techShop.shop.id == shopA.shop.id &&
+          techShop.member.role == ShopRole.technician,
+      'joined on an earlier run',
+    );
+  }
+  check(
+    'the technician sees the shop\'s jobs',
+    (await tech.jobs.list()).any((s) => s.id == liveJob.id),
+  );
+  await expectFw(
+    'a technician cannot create invites',
+    () => tech.shop.createInvite(),
+    FwErrorCode.forbidden,
+  );
+
   // 6. Unauthorized access.
   await expectFw(
     'another shop cannot read this job',

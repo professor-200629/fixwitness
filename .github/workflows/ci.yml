@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.47.6'
+  SERVERPOD_VERSION: '4.0.4'
+
+jobs:
+  analyze:
+    name: Analyze and format (all packages)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --set-exit-if-changed --output=none fixwitness_server fixwitness_flutter fixwitness_e2e
+
+      - name: Analyze server
+        working-directory: fixwitness_server
+        run: dart analyze --fatal-infos
+
+      - name: Analyze app
+        working-directory: fixwitness_flutter
+        run: flutter analyze
+
+      - name: Analyze end-to-end harness
+        working-directory: fixwitness_e2e
+        run: dart analyze
+
+  server-tests:
+    name: Server tests (embedded PostgreSQL)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      # The test database is an embedded PostgreSQL that exists only for this
+      # run, so its password is generated here rather than stored anywhere.
+      - name: Generate a throwaway test database password
+        run: echo "SERVERPOD_PASSWORD_database=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+
+      # The binaries are downloaded once and cached between runs. The bundle
+      # changes with the Serverpod version, so the version is in the key.
+      - name: Cache embedded PostgreSQL binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/serverpod/pg-binaries
+          key: serverpod-pg-binaries-${{ runner.os }}-${{ env.SERVERPOD_VERSION }}
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Install Serverpod CLI
+        run: |
+          dart install serverpod_cli@$SERVERPOD_VERSION
+          # `dart install` puts executables in the Dart data home, which is not
+          # on the PATH of a GitHub runner.
+          echo "${XDG_STATE_HOME:-$HOME/.local/state}/Dart/install/bin" >> "$GITHUB_PATH"
+
+      - name: Generated code is up to date
+        working-directory: fixwitness_server
+        run: |
+          serverpod generate
+          git diff --exit-code -- . ../fixwitness_client
+
+      - name: Run tests
+        working-directory: fixwitness_server
+        run: dart test
+
+  app-tests:
+    name: App tests (offline outbox and cache)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        working-directory: fixwitness_flutter
+        run: flutter test
+
+      - name: Build the web app (customer page + shop app)
+        working-directory: fixwitness_flutter
+        run: flutter build web --release --base-href /
