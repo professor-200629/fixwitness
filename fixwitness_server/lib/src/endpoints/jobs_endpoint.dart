@@ -4,6 +4,7 @@ import '../fixwitness/access.dart';
 import '../fixwitness/errors.dart';
 import '../fixwitness/history.dart';
 import '../fixwitness/job_views.dart';
+import '../fixwitness/live.dart';
 import '../fixwitness/validation.dart';
 import '../fixwitness/workflow.dart';
 import '../generated/protocol.dart';
@@ -73,7 +74,7 @@ class JobsEndpoint extends Endpoint {
     );
 
     try {
-      return await session.db.transaction((tx) async {
+      final created = await session.db.transaction((tx) async {
         // Lock the shop row to hand out the next job number without gaps or
         // duplicates when two devices create jobs at the same moment.
         final shop = (await Shop.db.findById(
@@ -118,6 +119,8 @@ class JobsEndpoint extends Endpoint {
         );
         return RepairJob.db.updateRow(session, job, transaction: tx);
       });
+      await announce(session, created, 'New job: ${deviceLabel(created)}.');
+      return created;
     } catch (e) {
       if (!isUniqueViolation(e)) rethrow;
       final raced = await _jobForOp(session, opId, ctx);
@@ -169,7 +172,7 @@ class JobsEndpoint extends Endpoint {
     }
     final body = requireText(text, 'Note', max: 2000);
     try {
-      return await session.db.transaction((tx) async {
+      final (note, saved) = await session.db.transaction((tx) async {
         var job = await loadShopJob(
           session,
           jobId,
@@ -201,9 +204,14 @@ class JobsEndpoint extends Endpoint {
           summary: customerVisible ? 'Update: $body' : 'Internal note added.',
           customerVisible: customerVisible,
         );
-        await saveJob(session, tx, job);
-        return note;
+        return (note, await saveJob(session, tx, job));
       });
+      await announce(
+        session,
+        saved,
+        'Note added by ${ctx.member.displayName}.',
+      );
+      return note;
     } catch (e) {
       if (!isUniqueViolation(e)) rethrow;
       final raced = await replay();
@@ -249,7 +257,7 @@ class JobsEndpoint extends Endpoint {
         ),
     ];
     try {
-      return await session.db.transaction((tx) async {
+      final (report, saved) = await session.db.transaction((tx) async {
         var job = await loadShopJob(
           session,
           jobId,
@@ -290,9 +298,10 @@ class JobsEndpoint extends Endpoint {
               : 'Condition recorded: ${flagged.join(', ')} noted as damaged '
                     'or not working.',
         );
-        await saveJob(session, tx, job);
-        return report;
+        return (report, await saveJob(session, tx, job));
       });
+      await announce(session, saved, 'Condition checklist recorded.');
+      return report;
     } catch (e) {
       if (!isUniqueViolation(e)) rethrow;
       final raced = await replay();
@@ -322,7 +331,7 @@ class JobsEndpoint extends Endpoint {
     );
     final currency = ctx.shop.currency;
 
-    return session.db.transaction((tx) async {
+    final (estimate, saved) = await session.db.transaction((tx) async {
       var job = await loadShopJob(
         session,
         jobId,
@@ -416,7 +425,7 @@ class JobsEndpoint extends Endpoint {
             '${reason == null ? '' : '. Reason: $reason'}',
         estimateVersion: version,
       );
-      await saveJob(
+      final saved = await saveJob(
         session,
         tx,
         job.copyWith(
@@ -424,8 +433,15 @@ class JobsEndpoint extends Endpoint {
           currentEstimateId: estimate.id,
         ),
       );
-      return estimate;
+      return (estimate, saved);
     });
+    await announce(
+      session,
+      saved,
+      'Estimate v${estimate.versionNumber} issued: '
+      '${formatMoney(estimate.totalMinor, currency)}.',
+    );
+    return estimate;
   }
 
   Future<RepairJob> startWork(Session session, int jobId) =>
@@ -458,7 +474,8 @@ class JobsEndpoint extends Endpoint {
     required String Function(int version) summary,
   }) async {
     final ctx = await requireMember(session);
-    return session.db.transaction((tx) async {
+    String? text;
+    final saved = await session.db.transaction((tx) async {
       var job = await loadShopJob(
         session,
         jobId,
@@ -487,7 +504,7 @@ class JobsEndpoint extends Endpoint {
         type: type,
         actorKind: ActorKind.shop,
         actorLabel: ctx.member.displayName,
-        summary: summary(authorized.versionNumber),
+        summary: text = summary(authorized.versionNumber),
         estimateVersion: authorized.versionNumber,
       );
       return saveJob(
@@ -498,6 +515,8 @@ class JobsEndpoint extends Endpoint {
             : job.copyWith(status: to),
       );
     });
+    await announce(session, saved, text!);
+    return saved;
   }
 
   /// Records a handover at the counter when the customer cannot confirm on
@@ -509,7 +528,7 @@ class JobsEndpoint extends Endpoint {
   ) async {
     final ctx = await requireMember(session);
     final who = requireText(collectedBy, 'Collected by', max: 80);
-    return session.db.transaction((tx) async {
+    final saved = await session.db.transaction((tx) async {
       var job = await loadShopJob(
         session,
         jobId,
@@ -538,5 +557,7 @@ class JobsEndpoint extends Endpoint {
         ),
       );
     });
+    await announce(session, saved, 'Device handed over to $who.');
+    return saved;
   }
 }

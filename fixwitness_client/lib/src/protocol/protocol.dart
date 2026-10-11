@@ -39,6 +39,8 @@ import 'estimate_status.dart' as _i3t4a52c;
 import 'evidence_photo.dart' as _ik1uvvpd;
 import 'fw_error_code.dart' as _i49jwhm1;
 import 'fw_exception.dart' as _i8jn2jtm;
+import 'invite_code.dart' as _ih5rnbad;
+import 'job_change.dart' as _i8zzvcgp;
 import 'job_detail.dart' as _ijlfhm28;
 import 'job_event.dart' as _ixn72kw5;
 import 'job_event_type.dart' as _iwt0hck5;
@@ -75,6 +77,8 @@ export 'estimate_status.dart';
 export 'evidence_photo.dart';
 export 'fw_error_code.dart';
 export 'fw_exception.dart';
+export 'invite_code.dart';
+export 'job_change.dart';
 export 'job_detail.dart';
 export 'job_event.dart';
 export 'job_event_type.dart';
@@ -368,6 +372,12 @@ class Protocol extends _isd.DatabaseSerializationManager {
     if (t == _i8jn2jtm.FwException) {
       return _i8jn2jtm.FwException.fromJson(data) as T;
     }
+    if (t == _ih5rnbad.InviteCode) {
+      return _ih5rnbad.InviteCode.fromJson(data) as T;
+    }
+    if (t == _i8zzvcgp.JobChange) {
+      return _i8zzvcgp.JobChange.fromJson(data) as T;
+    }
     if (t == _ijlfhm28.JobDetail) {
       return _ijlfhm28.JobDetail.fromJson(data) as T;
     }
@@ -484,6 +494,12 @@ class Protocol extends _isd.DatabaseSerializationManager {
     }
     if (t == _isc.getType<_i8jn2jtm.FwException?>()) {
       return (data != null ? _i8jn2jtm.FwException.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ih5rnbad.InviteCode?>()) {
+      return (data != null ? _ih5rnbad.InviteCode.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_i8zzvcgp.JobChange?>()) {
+      return (data != null ? _i8zzvcgp.JobChange.fromJson(data) : null) as T;
     }
     if (t == _isc.getType<_ijlfhm28.JobDetail?>()) {
       return (data != null ? _ijlfhm28.JobDetail.fromJson(data) : null) as T;
@@ -648,6 +664,8 @@ class Protocol extends _isd.DatabaseSerializationManager {
       _ik1uvvpd.EvidencePhoto => 'EvidencePhoto',
       _i49jwhm1.FwErrorCode => 'FwErrorCode',
       _i8jn2jtm.FwException => 'FwException',
+      _ih5rnbad.InviteCode => 'InviteCode',
+      _i8zzvcgp.JobChange => 'JobChange',
       _ijlfhm28.JobDetail => 'JobDetail',
       _ixn72kw5.JobEvent => 'JobEvent',
       _iwt0hck5.JobEventType => 'JobEventType',
@@ -716,6 +734,10 @@ class Protocol extends _isd.DatabaseSerializationManager {
         return 'FwErrorCode';
       case _i8jn2jtm.FwException():
         return 'FwException';
+      case _ih5rnbad.InviteCode():
+        return 'InviteCode';
+      case _i8zzvcgp.JobChange():
+        return 'JobChange';
       case _ijlfhm28.JobDetail():
         return 'JobDetail';
       case _ixn72kw5.JobEvent():
@@ -827,6 +849,12 @@ class Protocol extends _isd.DatabaseSerializationManager {
     }
     if (dataClassName == 'FwException') {
       return deserialize<_i8jn2jtm.FwException>(data['data']);
+    }
+    if (dataClassName == 'InviteCode') {
+      return deserialize<_ih5rnbad.InviteCode>(data['data']);
+    }
+    if (dataClassName == 'JobChange') {
+      return deserialize<_i8zzvcgp.JobChange>(data['data']);
     }
     if (dataClassName == 'JobDetail') {
       return deserialize<_ijlfhm28.JobDetail>(data['data']);

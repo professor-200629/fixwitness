@@ -1,0 +1,5 @@
+### Returned once to the owner who created an invite.
+class: InviteCode
+fields:
+  code: String
+  expiresAt: DateTime

@@ -2,6 +2,7 @@ import 'package:serverpod/serverpod.dart';
 
 import '../fixwitness/errors.dart';
 import '../fixwitness/history.dart';
+import '../fixwitness/live.dart';
 import '../fixwitness/links.dart';
 import '../fixwitness/validation.dart';
 import '../fixwitness/workflow.dart';
@@ -146,7 +147,7 @@ class CustomerEndpoint extends Endpoint {
     final declineReason = optionalText(reason, 'Reason', max: 300);
     final origin = requestOrigin(session);
     try {
-      return await session.db.transaction((tx) async {
+      final (decided, changedJob) = await session.db.transaction((tx) async {
         final link = await resolveLink(session, token, transaction: tx);
         var job = (await RepairJob.db.findById(
           session,
@@ -239,7 +240,7 @@ class CustomerEndpoint extends Endpoint {
                     '${declineReason == null ? '' : ': $declineReason'}.',
           estimateVersion: estimate.versionNumber,
         );
-        await saveJob(
+        final changed = await saveJob(
           session,
           tx,
           approved
@@ -249,8 +250,17 @@ class CustomerEndpoint extends Endpoint {
                 )
               : job.copyWith(status: JobStatus.declined),
         );
-        return saved;
+        return (saved, changed);
       });
+      await announce(
+        session,
+        changedJob,
+        decided.decision == DecisionKind.approved
+            ? 'Customer approved estimate v${decided.versionNumber}.'
+            : 'Customer declined estimate v${decided.versionNumber}.',
+        fromCustomer: true,
+      );
+      return decided;
     } on FwException catch (e) {
       if (e.code == FwErrorCode.estimateOutdated) {
         await _recordRefusedDecision(session, token, versionNumber, e);
@@ -267,7 +277,7 @@ class CustomerEndpoint extends Endpoint {
   ) async {
     _refuseShopSession(session);
     final name = requireText(typedName, 'Your name', min: 2, max: 80);
-    await session.db.transaction((tx) async {
+    final changed = await session.db.transaction((tx) async {
       final link = await resolveLink(session, token, transaction: tx);
       var job = (await RepairJob.db.findById(
         session,
@@ -285,7 +295,7 @@ class CustomerEndpoint extends Endpoint {
         actorLabel: name,
         summary: 'Customer confirmed collecting the device, signed as "$name".',
       );
-      await saveJob(
+      return saveJob(
         session,
         tx,
         job.copyWith(
@@ -294,6 +304,12 @@ class CustomerEndpoint extends Endpoint {
         ),
       );
     });
+    await announce(
+      session,
+      changed,
+      'Customer confirmed collecting the device.',
+      fromCustomer: true,
+    );
   }
 
   void _refuseShopSession(Session session) {
@@ -329,7 +345,7 @@ class CustomerEndpoint extends Endpoint {
     FwException refusal,
   ) async {
     try {
-      await session.db.transaction((tx) async {
+      final changed = await session.db.transaction((tx) async {
         final link = await resolveLink(session, token, transaction: tx);
         var job = (await RepairJob.db.findById(
           session,
@@ -349,8 +365,18 @@ class CustomerEndpoint extends Endpoint {
               '${refusal.currentVersion == attemptedVersion ? 'the content had changed' : 'v${refusal.currentVersion} is the current version'}.',
           estimateVersion: attemptedVersion,
         );
-        await saveJob(session, tx, job);
+        return saveJob(session, tx, job);
       });
+      await announce(
+        session,
+        changed,
+        refusal.currentVersion == attemptedVersion
+            ? 'A customer decision on v$attemptedVersion was refused: the '
+                  'estimate on their screen did not match. Nothing was recorded.'
+            : 'The customer tried to decide on v$attemptedVersion, but '
+                  'v${refusal.currentVersion} is current. Nothing was recorded.',
+        fromCustomer: true,
+      );
     } catch (e, st) {
       session.log('Could not record refused decision: $e', stackTrace: st);
     }

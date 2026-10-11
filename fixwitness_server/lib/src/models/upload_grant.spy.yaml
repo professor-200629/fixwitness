@@ -1,0 +1,15 @@
+### An upload description handed to a device. Removed when the photo is
+### registered; a recurring task deletes bytes whose grant was never used up.
+class: UploadGrant
+table: upload_grant
+serverOnly: true
+fields:
+  path: String
+  shopId: int
+  jobId: int
+  opId: UuidValue
+  createdAt: DateTime
+indexes:
+  upload_grant_path_idx:
+    fields: path
+    unique: true

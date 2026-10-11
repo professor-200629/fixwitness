@@ -13,3 +13,4 @@ values:
   - sensitiveContent
   - uploadMissing
   - uploadRejected
+  - inviteInvalid

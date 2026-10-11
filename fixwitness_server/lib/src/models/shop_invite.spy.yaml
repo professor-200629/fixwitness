@@ -1,0 +1,17 @@
+### A single-use code an owner gives a technician to join the shop. Only the
+### SHA-256 of the code is stored.
+class: ShopInvite
+table: shop_invite
+serverOnly: true
+fields:
+  shopId: int, relation(parent=shop, onDelete=Cascade)
+  codeHash: String
+  createdByUserId: UuidValue
+  createdAt: DateTime
+  expiresAt: DateTime
+  usedAt: DateTime?
+  usedByUserId: UuidValue?
+indexes:
+  shop_invite_code_idx:
+    fields: codeHash
+    unique: true

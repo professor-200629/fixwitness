@@ -1,0 +1,10 @@
+### Pushed live to every signed-in device of a shop when one of its jobs
+### changes. Carries only what a notification needs; clients reload the job.
+class: JobChange
+fields:
+  jobId: int
+  jobNumber: int
+  summary: String
+  ### True when the customer did it (approval, decline, collection).
+  fromCustomer: bool
+  occurredAt: DateTime

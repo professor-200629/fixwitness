@@ -40,6 +40,8 @@ import 'estimate_status.dart' as _i3t4a52c;
 import 'evidence_photo.dart' as _ik1uvvpd;
 import 'fw_error_code.dart' as _i49jwhm1;
 import 'fw_exception.dart' as _i8jn2jtm;
+import 'invite_code.dart' as _ih5rnbad;
+import 'job_change.dart' as _i8zzvcgp;
 import 'job_detail.dart' as _ijlfhm28;
 import 'job_event.dart' as _ixn72kw5;
 import 'job_event_type.dart' as _iwt0hck5;
@@ -56,8 +58,10 @@ import 'photo_upload_ticket.dart' as _ivh14x5g;
 import 'repair_job.dart' as _ibfrpqb8;
 import 'shop.dart' as _isgf2ncs;
 import 'shop_context.dart' as _inmn8lg4;
+import 'shop_invite.dart' as _i8gxrkal;
 import 'shop_member.dart' as _ip7etvmn;
 import 'shop_role.dart' as _inr72q68;
+import 'upload_grant.dart' as _i1x08lv6;
 export 'actor_kind.dart';
 export 'authorization_state.dart';
 export 'cached_job.dart';
@@ -76,6 +80,8 @@ export 'estimate_status.dart';
 export 'evidence_photo.dart';
 export 'fw_error_code.dart';
 export 'fw_exception.dart';
+export 'invite_code.dart';
+export 'job_change.dart';
 export 'job_detail.dart';
 export 'job_event.dart';
 export 'job_event_type.dart';
@@ -92,8 +98,10 @@ export 'photo_upload_ticket.dart';
 export 'repair_job.dart';
 export 'shop.dart';
 export 'shop_context.dart';
+export 'shop_invite.dart';
 export 'shop_member.dart';
 export 'shop_role.dart';
+export 'upload_grant.dart';
 
 class Protocol extends _is.DatabaseSerializationManager {
   Protocol._();
@@ -1062,6 +1070,91 @@ class Protocol extends _is.DatabaseSerializationManager {
       managed: true,
     ),
     _isp.TableDefinition(
+      name: 'shop_invite',
+      dartName: 'ShopInvite',
+      schema: 'public',
+      module: 'fixwitness',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'shopId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'codeHash',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdByUserId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'expiresAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'usedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'usedByUserId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: true,
+          dartType: 'UuidValue?',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'shop_invite_fk_0',
+          columns: ['shopId'],
+          referenceTable: 'shop',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'shop_invite_code_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'codeHash',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
       name: 'shop_member',
       dartName: 'ShopMember',
       schema: 'public',
@@ -1126,6 +1219,68 @@ class Protocol extends _is.DatabaseSerializationManager {
             _isp.IndexElementDefinition(
               type: _isp.IndexElementDefinitionType.column,
               definition: 'authUserId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'upload_grant',
+      dartName: 'UploadGrant',
+      schema: 'public',
+      module: 'fixwitness',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'path',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'shopId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'jobId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'opId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'upload_grant_path_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'path',
             ),
           ],
           type: 'btree',
@@ -1221,6 +1376,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _i8jn2jtm.FwException) {
       return _i8jn2jtm.FwException.fromJson(data) as T;
     }
+    if (t == _ih5rnbad.InviteCode) {
+      return _ih5rnbad.InviteCode.fromJson(data) as T;
+    }
+    if (t == _i8zzvcgp.JobChange) {
+      return _i8zzvcgp.JobChange.fromJson(data) as T;
+    }
     if (t == _ijlfhm28.JobDetail) {
       return _ijlfhm28.JobDetail.fromJson(data) as T;
     }
@@ -1269,11 +1430,17 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _inmn8lg4.ShopContext) {
       return _inmn8lg4.ShopContext.fromJson(data) as T;
     }
+    if (t == _i8gxrkal.ShopInvite) {
+      return _i8gxrkal.ShopInvite.fromJson(data) as T;
+    }
     if (t == _ip7etvmn.ShopMember) {
       return _ip7etvmn.ShopMember.fromJson(data) as T;
     }
     if (t == _inr72q68.ShopRole) {
       return _inr72q68.ShopRole.fromJson(data) as T;
+    }
+    if (t == _i1x08lv6.UploadGrant) {
+      return _i1x08lv6.UploadGrant.fromJson(data) as T;
     }
     if (t == _is.getType<_ijpkiimy.ActorKind?>()) {
       return (data != null ? _ijpkiimy.ActorKind.fromJson(data) : null) as T;
@@ -1338,6 +1505,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_i8jn2jtm.FwException?>()) {
       return (data != null ? _i8jn2jtm.FwException.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_ih5rnbad.InviteCode?>()) {
+      return (data != null ? _ih5rnbad.InviteCode.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i8zzvcgp.JobChange?>()) {
+      return (data != null ? _i8zzvcgp.JobChange.fromJson(data) : null) as T;
+    }
     if (t == _is.getType<_ijlfhm28.JobDetail?>()) {
       return (data != null ? _ijlfhm28.JobDetail.fromJson(data) : null) as T;
     }
@@ -1388,11 +1561,17 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_inmn8lg4.ShopContext?>()) {
       return (data != null ? _inmn8lg4.ShopContext.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_i8gxrkal.ShopInvite?>()) {
+      return (data != null ? _i8gxrkal.ShopInvite.fromJson(data) : null) as T;
+    }
     if (t == _is.getType<_ip7etvmn.ShopMember?>()) {
       return (data != null ? _ip7etvmn.ShopMember.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_inr72q68.ShopRole?>()) {
       return (data != null ? _inr72q68.ShopRole.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i1x08lv6.UploadGrant?>()) {
+      return (data != null ? _i1x08lv6.UploadGrant.fromJson(data) : null) as T;
     }
     if (t == List<_i5ylibdu.ConditionItem>) {
       return (data as List)
@@ -1504,6 +1683,8 @@ class Protocol extends _is.DatabaseSerializationManager {
       _ik1uvvpd.EvidencePhoto => 'EvidencePhoto',
       _i49jwhm1.FwErrorCode => 'FwErrorCode',
       _i8jn2jtm.FwException => 'FwException',
+      _ih5rnbad.InviteCode => 'InviteCode',
+      _i8zzvcgp.JobChange => 'JobChange',
       _ijlfhm28.JobDetail => 'JobDetail',
       _ixn72kw5.JobEvent => 'JobEvent',
       _iwt0hck5.JobEventType => 'JobEventType',
@@ -1520,8 +1701,10 @@ class Protocol extends _is.DatabaseSerializationManager {
       _ibfrpqb8.RepairJob => 'RepairJob',
       _isgf2ncs.Shop => 'Shop',
       _inmn8lg4.ShopContext => 'ShopContext',
+      _i8gxrkal.ShopInvite => 'ShopInvite',
       _ip7etvmn.ShopMember => 'ShopMember',
       _inr72q68.ShopRole => 'ShopRole',
+      _i1x08lv6.UploadGrant => 'UploadGrant',
       _ => null,
     };
   }
@@ -1572,6 +1755,10 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'FwErrorCode';
       case _i8jn2jtm.FwException():
         return 'FwException';
+      case _ih5rnbad.InviteCode():
+        return 'InviteCode';
+      case _i8zzvcgp.JobChange():
+        return 'JobChange';
       case _ijlfhm28.JobDetail():
         return 'JobDetail';
       case _ixn72kw5.JobEvent():
@@ -1604,10 +1791,14 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'Shop';
       case _inmn8lg4.ShopContext():
         return 'ShopContext';
+      case _i8gxrkal.ShopInvite():
+        return 'ShopInvite';
       case _ip7etvmn.ShopMember():
         return 'ShopMember';
       case _inr72q68.ShopRole():
         return 'ShopRole';
+      case _i1x08lv6.UploadGrant():
+        return 'UploadGrant';
     }
     className = _iais.Protocol().getClassNameForObject(data);
     if (className != null) {
@@ -1688,6 +1879,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'FwException') {
       return deserialize<_i8jn2jtm.FwException>(data['data']);
     }
+    if (dataClassName == 'InviteCode') {
+      return deserialize<_ih5rnbad.InviteCode>(data['data']);
+    }
+    if (dataClassName == 'JobChange') {
+      return deserialize<_i8zzvcgp.JobChange>(data['data']);
+    }
     if (dataClassName == 'JobDetail') {
       return deserialize<_ijlfhm28.JobDetail>(data['data']);
     }
@@ -1736,11 +1933,17 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'ShopContext') {
       return deserialize<_inmn8lg4.ShopContext>(data['data']);
     }
+    if (dataClassName == 'ShopInvite') {
+      return deserialize<_i8gxrkal.ShopInvite>(data['data']);
+    }
     if (dataClassName == 'ShopMember') {
       return deserialize<_ip7etvmn.ShopMember>(data['data']);
     }
     if (dataClassName == 'ShopRole') {
       return deserialize<_inr72q68.ShopRole>(data['data']);
+    }
+    if (dataClassName == 'UploadGrant') {
+      return deserialize<_i1x08lv6.UploadGrant>(data['data']);
     }
     if (dataClassName.startsWith('serverpod_auth_idp.')) {
       data['className'] = dataClassName.substring(19);
@@ -1801,8 +2004,12 @@ class Protocol extends _is.DatabaseSerializationManager {
         return _ibfrpqb8.RepairJob.t;
       case _isgf2ncs.Shop:
         return _isgf2ncs.Shop.t;
+      case _i8gxrkal.ShopInvite:
+        return _i8gxrkal.ShopInvite.t;
       case _ip7etvmn.ShopMember:
         return _ip7etvmn.ShopMember.t;
+      case _i1x08lv6.UploadGrant:
+        return _i1x08lv6.UploadGrant.t;
     }
     return null;
   }

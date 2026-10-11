@@ -14,6 +14,7 @@ import 'package:fixwitness_server/src/generated/condition_item.dart'
     as _it1p0zjf;
 import 'package:fixwitness_server/src/generated/estimate_line.dart'
     as _ixftu19y;
+import 'package:fixwitness_server/src/generated/future_calls.dart' as _i5kttjhb;
 import 'package:fixwitness_server/src/generated/new_job_input.dart'
     as _iau16sri;
 import 'package:fixwitness_server/src/generated/photo_stage.dart' as _ipjl1w58;
@@ -29,6 +30,7 @@ import '../endpoints/evidence_endpoint.dart' as _i2cvsm7u;
 import '../endpoints/jobs_endpoint.dart' as _iu8dkase;
 import '../endpoints/links_endpoint.dart' as _ix0wsr6z;
 import '../endpoints/shop_endpoint.dart' as _i4fqeydl;
+export 'future_calls.dart' show ServerpodFutureCallsGetter;
 
 class Endpoints extends _is.EndpointDispatch {
   @override
@@ -872,11 +874,62 @@ class Endpoints extends _is.EndpointDispatch {
                     params['yourName'],
                   ),
         ),
+        'createInvite': _is.MethodConnector(
+          name: 'createInvite',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['shop'] as _i4fqeydl.ShopEndpoint)
+                  .createInvite(session),
+        ),
+        'joinShop': _is.MethodConnector(
+          name: 'joinShop',
+          params: {
+            'code': _is.ParameterDescription(
+              name: 'code',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+            'yourName': _is.ParameterDescription(
+              name: 'yourName',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['shop'] as _i4fqeydl.ShopEndpoint).joinShop(
+                session,
+                params['code'],
+                params['yourName'],
+              ),
+        ),
+        'watch': _is.MethodStreamConnector(
+          name: 'watch',
+          params: {},
+          streamParams: {},
+          returnType: _is.MethodStreamReturnType.streamType,
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+                Map<String, Stream> streamParams,
+              ) => (endpoints['shop'] as _i4fqeydl.ShopEndpoint).watch(session),
+        ),
       },
     );
     modules['serverpod_auth_idp'] = _iais.Endpoints()
       ..initializeEndpoints(server);
     modules['serverpod_auth_core'] = _iacs.Endpoints()
       ..initializeEndpoints(server);
+  }
+
+  @override
+  _is.FutureCallDispatch? get futureCalls {
+    return _i5kttjhb.FutureCalls();
   }
 }

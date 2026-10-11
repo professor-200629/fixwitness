@@ -34,3 +34,6 @@ links:
 shop:
   - myShop:
   - createShop:
+  - watch:
+  - createInvite:
+  - joinShop:

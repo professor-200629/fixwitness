@@ -29,6 +29,9 @@ import 'package:fixwitness_server/src/generated/estimate_line.dart'
     as _ixftu19y;
 import 'package:fixwitness_server/src/generated/evidence_photo.dart'
     as _i5i3e7cq;
+import 'package:fixwitness_server/src/generated/future_calls.dart' as _i5kttjhb;
+import 'package:fixwitness_server/src/generated/invite_code.dart' as _iudbfvlh;
+import 'package:fixwitness_server/src/generated/job_change.dart' as _i4dubxwg;
 import 'package:fixwitness_server/src/generated/job_detail.dart' as _i32tir61;
 import 'package:fixwitness_server/src/generated/job_note.dart' as _i9dhnfbi;
 import 'package:fixwitness_server/src/generated/job_summary.dart' as _ijgt50sf;
@@ -176,6 +179,8 @@ void withServerpod(
 }
 
 class TestEndpoints {
+  late final futureCalls = _FutureCalls();
+
   late final _EmailIdpEndpoint emailIdp;
 
   late final _JwtRefreshEndpoint jwtRefresh;
@@ -227,6 +232,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
   }
+}
+
+class _FutureCalls {
+  late final maintenance = _MaintenanceFutureCall();
 }
 
 class _EmailIdpEndpoint {
@@ -1309,5 +1318,116 @@ class _ShopEndpoint {
         await _localUniqueSession.close();
       }
     });
+  }
+
+  _ida.Stream<_i4dubxwg.JobChange> watch(
+    _ist.TestSessionBuilder sessionBuilder,
+  ) {
+    var _localTestStreamManager = _ist.TestStreamManager<_i4dubxwg.JobChange>();
+    _ist.callStreamFunctionAndHandleExceptions(
+      () async {
+        var _localUniqueSession =
+            (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+              endpoint: 'shop',
+              method: 'watch',
+            );
+        var _localCallContext = await _endpointDispatch
+            .getMethodStreamCallContext(
+              createSessionCallback: (_) => _localUniqueSession,
+              endpointPath: 'shop',
+              methodName: 'watch',
+              arguments: {},
+              requestedInputStreams: [],
+              serializationManager: _serializationManager,
+            );
+        await _localTestStreamManager.callStreamMethod(
+          _localCallContext,
+          _localUniqueSession,
+          {},
+        );
+      },
+      _localTestStreamManager.outputStreamController,
+    );
+    return _localTestStreamManager.outputStreamController.stream;
+  }
+
+  _ida.Future<_iudbfvlh.InviteCode> createInvite(
+    _ist.TestSessionBuilder sessionBuilder,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'shop',
+            method: 'createInvite',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'shop',
+          methodName: 'createInvite',
+          parameters: _ist.testObjectToJson({}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_iudbfvlh.InviteCode>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_i0xx0wvb.ShopContext> joinShop(
+    _ist.TestSessionBuilder sessionBuilder,
+    String code,
+    String yourName,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'shop',
+            method: 'joinShop',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'shop',
+          methodName: 'joinShop',
+          parameters: _ist.testObjectToJson({
+            'code': code,
+            'yourName': yourName,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i0xx0wvb.ShopContext>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _MaintenanceFutureCall {
+  Future<void> sweep(_ist.TestSessionBuilder sessionBuilder) async {
+    var _localUniqueSession =
+        (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild();
+    try {
+      await _i5kttjhb.MaintenanceSweepFutureCall().invoke(
+        _localUniqueSession,
+        null,
+      );
+    } finally {
+      await _localUniqueSession.close();
+    }
   }
 }

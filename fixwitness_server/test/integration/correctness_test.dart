@@ -629,7 +629,7 @@ void main() {
         }
         // Both orders are legal; print the split so a run shows real contention.
         // ignore: avoid_print
-      print('approve-first: $approvalFirst / 15');
+        print('approve-first: $approvalFirst / 15');
       },
     );
   }, rollbackDatabase: RollbackDatabase.disabled);

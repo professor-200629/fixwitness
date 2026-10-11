@@ -108,4 +108,18 @@ void run(List<String> args) async {
 
   // Start the server.
   await pod.start();
+
+  // Every hour, delete photo bytes that were uploaded but never registered as
+  // evidence (see lib/src/fixwitness/maintenance.dart). Re-registered on each
+  // start under a fixed identifier, so restarts do not stack schedules.
+  try {
+    await pod.futureCalls.cancel('orphan-upload-sweep');
+  } catch (_) {
+    // Nothing scheduled yet.
+  }
+  await pod.futureCalls
+      .callRecurring(identifier: 'orphan-upload-sweep')
+      .every(const Duration(hours: 1))
+      .maintenance
+      .sweep();
 }

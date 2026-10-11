@@ -24,7 +24,8 @@ enum FwErrorCode implements _is.SerializableModel {
   shopAccountCannotApprove,
   sensitiveContent,
   uploadMissing,
-  uploadRejected;
+  uploadRejected,
+  inviteInvalid;
 
   static FwErrorCode fromJson(String name) {
     switch (name) {
@@ -52,6 +53,8 @@ enum FwErrorCode implements _is.SerializableModel {
         return FwErrorCode.uploadMissing;
       case 'uploadRejected':
         return FwErrorCode.uploadRejected;
+      case 'inviteInvalid':
+        return FwErrorCode.inviteInvalid;
       default:
         throw ArgumentError(
           'Value "$name" cannot be converted to "FwErrorCode"',

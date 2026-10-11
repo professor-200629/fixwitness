@@ -25,6 +25,8 @@ import 'package:fixwitness_client/src/protocol/estimate_decision.dart'
 import 'package:fixwitness_client/src/protocol/estimate_line.dart' as _io8rligr;
 import 'package:fixwitness_client/src/protocol/evidence_photo.dart'
     as _i8bjtbhl;
+import 'package:fixwitness_client/src/protocol/invite_code.dart' as _iez3sdug;
+import 'package:fixwitness_client/src/protocol/job_change.dart' as _i0h0gnvd;
 import 'package:fixwitness_client/src/protocol/job_detail.dart' as _i41u8z5d;
 import 'package:fixwitness_client/src/protocol/job_note.dart' as _itpzkpuz;
 import 'package:fixwitness_client/src/protocol/job_summary.dart' as _idiw8vex;
@@ -583,6 +585,43 @@ class EndpointShop extends _isc.EndpointRef {
     'createShop',
     {
       'shopName': shopName,
+      'yourName': yourName,
+    },
+  );
+
+  /// Live changes to the caller's shop: every device of the shop receives a
+  /// [JobChange] when a job changes, including customer approvals made on a
+  /// review link. Open while the app runs; reopen after a disconnect.
+  _ida.Stream<_i0h0gnvd.JobChange> watch() =>
+      caller.callStreamingServerEndpoint<
+        _ida.Stream<_i0h0gnvd.JobChange>,
+        _i0h0gnvd.JobChange
+      >(
+        'shop',
+        'watch',
+        {},
+        {},
+      );
+
+  /// Owner only: a single-use code a technician enters to join this shop.
+  /// Valid for 24 hours. Only its hash is stored, so it is shown just once.
+  _ida.Future<_iez3sdug.InviteCode> createInvite() =>
+      caller.callServerEndpoint<_iez3sdug.InviteCode>(
+        'shop',
+        'createInvite',
+        {},
+      );
+
+  /// Joins the shop that issued [code] as a technician. The caller must not
+  /// belong to a shop yet. Each code works once.
+  _ida.Future<_i2vlmjsu.ShopContext> joinShop(
+    String code,
+    String yourName,
+  ) => caller.callServerEndpoint<_i2vlmjsu.ShopContext>(
+    'shop',
+    'joinShop',
+    {
+      'code': code,
       'yourName': yourName,
     },
   );

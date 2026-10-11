@@ -6,6 +6,7 @@ import 'package:serverpod/serverpod.dart';
 import '../fixwitness/access.dart';
 import '../fixwitness/errors.dart';
 import '../fixwitness/history.dart';
+import '../fixwitness/live.dart';
 import '../fixwitness/validation.dart';
 import '../generated/protocol.dart';
 
@@ -61,6 +62,29 @@ class EvidenceEndpoint extends Endpoint {
         metadata: FileMetadata(contentType: contentType),
       ),
     );
+    // Remember the grant so bytes that are uploaded but never registered can
+    // be swept later (see maintenance.dart).
+    final grant = await UploadGrant.db.findFirstRow(
+      session,
+      where: (t) => t.path.equals(path),
+    );
+    if (grant == null) {
+      try {
+        await UploadGrant.db.insertRow(
+          session,
+          UploadGrant(
+            path: path,
+            shopId: ctx.shop.id!,
+            jobId: jobId,
+            opId: opId,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
+      } catch (e) {
+        // A concurrent retry recorded the same grant first.
+        if (!isUniqueViolation(e)) rethrow;
+      }
+    }
     return PhotoUploadTicket(
       alreadyStored: false,
       uploadDescription: description,
@@ -110,13 +134,18 @@ class EvidenceEndpoint extends Endpoint {
     }
 
     try {
-      return await session.db.transaction((tx) async {
+      final (photo, job) = await session.db.transaction((tx) async {
         var job = await loadShopJob(
           session,
           jobId,
           ctx.shop.id!,
           transaction: tx,
           lock: true,
+        );
+        await UploadGrant.db.deleteWhere(
+          session,
+          where: (t) => t.path.equals(path),
+          transaction: tx,
         );
         final photo = await EvidencePhoto.db.insertRow(
           session,
@@ -147,9 +176,10 @@ class EvidenceEndpoint extends Endpoint {
               '${_stageLabel(stage)} photo added'
               '${cleanCaption == null ? '' : ': $cleanCaption'}.',
         );
-        await saveJob(session, tx, job);
-        return photo;
+        return (photo, await saveJob(session, tx, job));
       });
+      await announce(session, job, '${_stageLabel(stage)} photo added.');
+      return photo;
     } catch (e) {
       if (!isUniqueViolation(e)) rethrow;
       final raced = await _photoForOp(session, opId, jobId);
