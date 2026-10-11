@@ -77,8 +77,14 @@ Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter
 - **Not deployed publicly.** Serverpod Cloud needs an account created by the owner
   (console.serverpod.dev) and `serverpod cloud launch`; ngrok is installed but has no auth token.
   The demo currently runs on this PC (http://localhost:8082).
-- **Customer page first load is slow over the tunnel** (27 s for `main.dart.js` on mobile data).
-  A production host with compression/CDN, or a smaller customer-only web build, would help.
+- **Customer page load time (fixed 2026-10-11).** It was 27 s for `main.dart.js` on the phone:
+  3.49 MB sent uncompressed, crossing the phone's mobile link twice because the PC uses its hotspot.
+  Now: the shop app is a deferred chunk (customer bundle 2.95 MB, shop-only part 553 KB loaded
+  only by the shop), and the server serves gzipped copies written by `tool/precompress_web.dart`
+  (`lib/src/web/precompressed.dart`, ETag + 304 on repeat visits, plain file for non-gzip
+  clients). Measured on the phone over mobile data: `main.dart.js` 864,748 bytes gzipped in
+  0.4 s (was 27.5 s); link opened to customer data loading in about 5 s, page drawn by about
+  7 s. A plain-HTML loading screen shows before Flutter starts instead of a white page.
 - **Customer link is a bearer credential.** Anyone holding the link can approve. Mitigations in
   place: 256-bit token stored only as a hash, token kept in the URL fragment (never sent to the
   server in requests or logs), 1–30 day expiry, revocation, refusal of signed-in shop sessions,

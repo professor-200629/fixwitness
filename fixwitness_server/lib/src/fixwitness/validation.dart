@@ -112,7 +112,9 @@ String formatMoney(int minor, String currency) {
   final abs = minor.abs();
   final whole = (abs ~/ 100).toString();
   final fraction = (abs % 100).toString().padLeft(2, '0');
-  final grouped = currency == 'INR' ? _groupIndian(whole) : _groupWestern(whole);
+  final grouped = currency == 'INR'
+      ? _groupIndian(whole)
+      : _groupWestern(whole);
   return '${negative ? '-' : ''}${_symbols[currency] ?? '$currency '}$grouped.$fraction';
 }
 

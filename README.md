@@ -65,7 +65,9 @@ test:
 # Build the Flutter web bundle that the server serves on port 8082
 cd fixwitness_flutter
 flutter build web --base-href /            # Git Bash: prefix MSYS_NO_PATHCONV=1
-# then copy build/web to ../fixwitness_server/web/app  (or: cd ../fixwitness_server && serverpod run flutter_build)
+# then copy build/web to ../fixwitness_server/web/app and gzip it for the server:
+#   cd ../fixwitness_server && dart tool/precompress_web.dart web/app
+# (or do all of it with: cd ../fixwitness_server && serverpod run flutter_build)
 
 cd ../fixwitness_server
 dart run bin/main.dart --apply-migrations  # API :8080, web :8082

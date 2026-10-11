@@ -7,6 +7,7 @@ import 'package:serverpod_cloud_storage/serverpod_cloud_storage.dart';
 import 'src/cache_busting.dart';
 import 'src/fixwitness/dev_mailbox.dart';
 import 'src/generated/serverpod.dart';
+import 'src/web/precompressed.dart';
 import 'src/web/routes/app_config_route.dart';
 
 /// The starting point of the Serverpod server.
@@ -55,6 +56,9 @@ void run(List<String> args) async {
   // Checks if the flutter web app has been built and serves it if it has.
   final appDir = Directory(Uri(path: 'web/app').toFilePath());
   if (appDir.existsSync()) {
+    // Gzipped copies of the bundle (tool/precompress_web.dart) for browsers
+    // that accept them: about a third of the bytes on a phone connection.
+    pod.webServer.addMiddleware(precompressedStatic(appDir), '/');
     // Serve the flutter web app under /.
     pod.webServer.addRoute(
       FlutterRoute(
