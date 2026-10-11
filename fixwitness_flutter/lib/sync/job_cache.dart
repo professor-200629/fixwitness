@@ -52,6 +52,11 @@ class SqliteJobCache implements JobCache {
           );
         }
       }
+      // Jobs the server no longer lists (deleted, or beyond the list's
+      // 200-job window) must not linger as offline ghosts.
+      for (final gone in existing.values) {
+        await CachedJob.db.deleteRow(session, gone, transaction: tx);
+      }
     });
   }
 
@@ -126,6 +131,8 @@ class MemoryJobCache implements JobCache {
     _summaries
       ..clear()
       ..addAll(jobs);
+    final ids = {for (final j in jobs) j.id};
+    _details.removeWhere((id, _) => !ids.contains(id));
     _at = DateTime.now().toUtc();
   }
 

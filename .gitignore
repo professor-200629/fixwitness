@@ -30,3 +30,6 @@ fixwitness_e2e/.demo_env.local
 
 # ngrok auth token (local only)
 deploy/ngrok-auth.local.yml
+
+# Local database backups (contain account data)
+backups/

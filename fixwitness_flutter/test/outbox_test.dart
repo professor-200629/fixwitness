@@ -544,4 +544,32 @@ void main() {
       await run.kill();
     },
   );
+
+  test('when sent items are cleared then unsent work stays queued', () async {
+    final run = await AppRun.start(dir, server);
+    final job = await server.createJob(
+      UuidValue.fromString('cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd'),
+      intake(),
+    );
+    await run.outbox.enqueueNote(
+      serverJobId: job.id,
+      text: 'Sent before',
+      customerVisible: false,
+    );
+    await run.outbox.syncOnce();
+    server.online = false;
+    await run.outbox.enqueueNote(
+      serverJobId: job.id,
+      text: 'Still offline',
+      customerVisible: false,
+    );
+    await run.outbox.syncOnce();
+
+    await run.outbox.pruneConfirmed(age: Duration.zero);
+    final left = await run.outbox.operations();
+    expect(left, hasLength(1));
+    expect(left.single.status, OpStatus.pending);
+    expect(left.single.payloadJson, contains('Still offline'));
+    await run.kill();
+  });
 }

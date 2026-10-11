@@ -56,7 +56,18 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
     final s = widget.services;
     final ops = s.operations.reversed.toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('Sync queue')),
+      appBar: AppBar(
+        title: const Text('Sync queue'),
+        actions: [
+          if (ops.any((o) => o.status == OpStatus.confirmed))
+            TextButton(
+              // Sent items are only a local receipt; the server keeps the
+              // record. Unsent or failed items are never touched here.
+              onPressed: () => s.outbox.pruneConfirmed(age: Duration.zero),
+              child: const Text('Clear sent items'),
+            ),
+        ],
+      ),
       body: ops.isEmpty
           ? const Center(child: Text('Nothing captured on this phone yet.'))
           : ListView(

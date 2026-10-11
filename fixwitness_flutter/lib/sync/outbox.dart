@@ -208,11 +208,14 @@ class Outbox {
   /// Removes confirmed operations older than [age].
   Future<void> pruneConfirmed({Duration age = const Duration(days: 1)}) async {
     final cutoff = DateTime.now().toUtc().subtract(age);
+    var removed = 0;
     for (final op in await store.all()) {
-      if (op.status == OpStatus.confirmed && op.updatedAt.isBefore(cutoff)) {
+      if (op.status == OpStatus.confirmed && !op.updatedAt.isAfter(cutoff)) {
         await store.delete(op);
+        removed++;
       }
     }
+    if (removed > 0) _changes.add(null);
   }
 
   /// Called at startup: an operation marked `syncing` when the app died was

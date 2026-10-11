@@ -34,7 +34,7 @@ Design notes: `docs/PLAN.md`. Setup: `README.md`. Demonstration: `docs/DEMO.md`.
 | Device passcodes not stored | Notes/fault/checklist text matching passcode patterns refused server-side; "PIN connector loose" allowed | PASS |
 | Secrets not in source control | `passwords.yaml`, demo credentials, web build, e2e artifacts gitignored; `git ls-files` checked | PASS |
 
-Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter test test/outbox_test.dart` **8/8**;
+Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter test` **11/11** (offline queue + job cache);
 `dart run bin/e2e.dart --phase before-restart` **35/35**, `--phase after-restart` **2/2**;
 `dart analyze` / `flutter analyze`: no issues.
 
@@ -63,6 +63,23 @@ Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter
 7. **Development server advertised `localhost`** to devices (upload and photo URLs). For phones and
    emulators run it with `SERVERPOD_API_SERVER_PUBLIC_HOST` / `SERVERPOD_WEB_SERVER_PUBLIC_HOST` set to
    the PC's LAN IP (README). In production these are the real domain.
+
+## Data state (2026-10-11)
+
+Test data removed from the development database with `deploy/cleanup-test-data.sql` (one
+transaction, after a `pg_dump` to the gitignored `backups/` folder):
+- 4 test accounts and their shops with all jobs, estimates, decisions, links, notes, checklists,
+  photo records and history (ravi.fixpoint@, e2e.owner.a@, e2e.owner.b@, demo.shop@example.com);
+- the TEST JOB #1 in the real shop "Electric shop" (account kept; job numbering reset to #1);
+- 5 stored photo files and pending upload/download grants; development request logs.
+Verified afterwards: 1 account, 1 shop, 0 jobs/estimates/photos/notes/events/stored files.
+Also cleared: the phone's sent-item receipts (new "Clear sent items" action), the dev mailbox file,
+e2e run files, the emulator's user data (AVD definition kept). `bin/demo.dart seed` recreates the
+demo shop when needed. Screenshots in `docs/evidence/` are kept as verification records.
+
+Bugs found during the cleanup and fixed: the offline job cache never dropped jobs the server no
+longer lists (deleted jobs would show offline as ghosts); sent queue items could only age out
+after 24 h. Both have tests (`test/job_cache_test.dart`, `outbox_test.dart`).
 
 ## Unresolved problems / not verified
 
