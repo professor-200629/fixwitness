@@ -1,11 +1,11 @@
 {
-    "name": "fixwitness_flutter",
-    "short_name": "fixwitness_flutter",
+    "name": "FixWitness",
+    "short_name": "FixWitness",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#101414",
+    "theme_color": "#0F6E6E",
+    "description": "Repair records your customers can trust: condition evidence, exact-version estimate approval, offline capture.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

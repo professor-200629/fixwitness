@@ -1,4 +1,4 @@
-package com.example.fixwitness_flutter
+package com.fixwitness.app
 
 import io.flutter.embedding.android.FlutterActivity
 

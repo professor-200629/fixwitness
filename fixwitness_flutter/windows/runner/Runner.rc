@@ -93,7 +93,7 @@ BEGIN
             VALUE "FileDescription", "fixwitness_flutter" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "fixwitness_flutter" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 FixWitness. All rights reserved." "\0"
             VALUE "OriginalFilename", "fixwitness_flutter.exe" "\0"
             VALUE "ProductName", "fixwitness_flutter" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

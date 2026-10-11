@@ -11,7 +11,7 @@
 param(
   [Parameter(Mandatory = $true)][ValidateSet('on', 'off', 'status')][string]$Mode,
   [string]$Serial = '',
-  [string]$Package = 'com.example.fixwitness_flutter',
+  [string]$Package = 'com.fixwitness.app',
   [string]$Adb = 'C:\platform-tools-latest-windows\platform-tools\adb.exe'
 )
 
