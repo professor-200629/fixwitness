@@ -67,7 +67,7 @@ Commands and counts from the last runs: `dart test` (server) **25/25**; `flutter
 ## Data state (2026-10-11)
 
 Test data removed from the development database with `deploy/cleanup-test-data.sql` (one
-transaction, after a `pg_dump` to the gitignored `backups/` folder):
+transaction, after a `pg_dump` backup that was itself deleted afterwards at the owner's request):
 - 4 test accounts and their shops with all jobs, estimates, decisions, links, notes, checklists,
   photo records and history (ravi.fixpoint@, e2e.owner.a@, e2e.owner.b@, demo.shop@example.com);
 - the TEST JOB #1 in the real shop "Electric shop" (account kept; job numbering reset to #1);
