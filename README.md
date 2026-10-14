@@ -44,7 +44,7 @@ STATUS.md            What is done, what was verified and how, open problems, nex
 | Models + relations (`.spy.yaml`), migrations | 12 server tables (shops, members, jobs, immutable estimate versions, decisions, customer links, condition reports, photos, notes, history, invites, upload grants) and 2 on-device tables | `fixwitness_server/lib/src/models`, `migrations/` |
 | Transactions with row locks (`LockMode.forUpdate`) | Approve-vs-revise races resolve to one serial order; history written in the same transaction | `lib/src/endpoints/*`, `lib/src/fixwitness/workflow.dart` |
 | Server events + streaming endpoint | `shop.watch()` streams job changes to every device of the shop; the customer's approval appears at the counter at once | `lib/src/fixwitness/live.dart`, `shop_endpoint.dart` |
-| Future calls (recurring) | Hourly sweep of photo bytes that were uploaded but never registered as evidence | `lib/src/fixwitness/maintenance.dart`, `lib/server.dart` |
+| Future calls (recurring) | Hourly sweep of photo bytes that were uploaded but never registered as evidence (Serverpod Cloud's Starter plan switches future calls off; the server then starts without the sweep) | `lib/src/fixwitness/maintenance.dart`, `lib/server.dart` |
 | Cloud storage (private) + direct upload descriptions + `verifyUpload` | Evidence photos never pass through the API; interrupted uploads are recognised and resumed | `evidence_endpoint.dart` |
 | Client-side database (`database: client`) | The Android offline outbox and job cache are Serverpod models in on-device SQLite | `cached_job.spy.yaml`, `pending_operation.spy.yaml`, `fixwitness_flutter/lib/sync` |
 | Auth (email identity provider, JWT) | Shop accounts; customers never sign in, they use a hashed, expiring, revocable link | `lib/server.dart`, `lib/src/fixwitness/links.dart` |
@@ -158,8 +158,27 @@ not exposed. The server still runs in development mode: sign-up codes go to the 
 
 ## Deploying
 
-The supported path is Serverpod Cloud (`serverpod cloud launch` from the project root after
-creating a project with a database at console.serverpod.dev). Any host that runs Dart or Docker
-also works (`fixwitness_server/Dockerfile`, `--mode production`), with an external PostgreSQL,
-an S3/GCS/R2 bucket for the `private` evidence storage (see `server.dart`), and an email
-provider configured for sign-up codes. See STATUS.md for the current deployment state.
+The public demo runs on **Serverpod Cloud**:
+
+| | URL |
+|---|---|
+| Web (shop app + customer pages) | https://fixwitness.serverpod.space/ |
+| API | https://fixwitness.api.serverpod.space/ |
+
+Cloud provides the PostgreSQL database (migrations run on deploy), the `private` storage that
+holds evidence photos, the email service that sends sign-up codes, and TLS. Passwords and
+config files never leave this machine (`.scloudignore`); Cloud generates its own.
+
+```bash
+# once: project with a database, then link this folder to it
+serverpod cloud project create fixwitness --plan starter --enable-db
+cd fixwitness_server && serverpod cloud project link fixwitness
+# every deploy: scloud.yaml runs `serverpod generate` and `serverpod run flutter_build` first
+serverpod cloud deploy
+# the Android app for the deployment
+cd ../fixwitness_flutter && flutter build apk --release --dart-define=SERVER_URL=https://fixwitness.api.serverpod.space/
+```
+
+Any other host that runs Dart or Docker also works (`fixwitness_server/Dockerfile`,
+`--mode production`), with an external PostgreSQL, an S3/GCS/R2 bucket for the `private`
+evidence storage (see `server.dart`), and an email provider configured for sign-up codes.

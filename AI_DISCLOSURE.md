@@ -40,7 +40,8 @@ Nothing here is accepted on the agent's word. The checks are in the repository a
   approvals, concurrent estimate changes, duplicate retries, access across shops, live updates,
   invites and the upload sweep.
 - 11 app tests for the offline queue and job cache, on real SQLite.
-- A 35-check HTTP end-to-end harness, plus a persistence check across a server restart.
+- A 42-check end-to-end harness over HTTP and websockets, plus a persistence check across a
+  server restart.
 - Runs on an Android emulator and a physical Android phone. Their results and screenshots are in
   `STATUS.md` and `docs/evidence/`.
 

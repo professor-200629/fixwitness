@@ -33,7 +33,8 @@ always the same three: "the screen wasn't cracked when I gave it to you", "I nev
 - **Transactions with row locks** make an approval racing a revision resolve to one serial
   order. History is written in the same transaction as the change.
 - **A streaming endpoint fed by server events** pushes job changes to the shop's devices.
-- **A recurring future call** cleans up photo uploads that were never registered.
+- **A recurring future call** cleans up photo uploads that were never registered (tested on
+  a real server; Cloud's Starter plan keeps future calls off, so the demo runs without it).
 - **Private cloud storage** takes photos as direct uploads, checked with `verifyUpload`, and
   resumes interrupted uploads.
 - **The client-side database** (`database: client`) holds the offline outbox and job cache as
@@ -48,15 +49,16 @@ always the same three: "the screen wasn't cracked when I gave it to you", "I nev
   cleanup.
 - 11 app tests cover the offline queue on real SQLite.
 - 42 end-to-end checks run over HTTP and websockets.
-- All of it runs in CI.
+- The server and app tests, analysis and formatting run in GitHub Actions on every push; the
+  end-to-end checks run against a live server.
 - Verified on an Android emulator and a physical Android phone, including an offline capture
   that survived an app restart and a customer approval made on the phone.
 
 **Try it.**
-- Web app and customer page: `<https://….serverpod.space>`
+- Web app and customer page: https://fixwitness.serverpod.space/
 - Android APK: `<release link>`
 - Demo shop login for judges: `<email / password>`
-- Code: `<github link>`
+- Code: https://github.com/professor-200629/fixwitness
 
 **AI disclosure.** Built with Claude Code (Claude Opus 5.5) and the official Serverpod agent
 skills. The developer wrote the specification and made the product decisions, and did the

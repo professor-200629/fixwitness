@@ -112,6 +112,14 @@ void run(List<String> args) async {
   // Every hour, delete photo bytes that were uploaded but never registered as
   // evidence (see lib/src/fixwitness/maintenance.dart). Re-registered on each
   // start under a fixed identifier, so restarts do not stack schedules.
+  // Future calls need the database and `futureCall.enabled`; where a host
+  // switches them off, the server runs without the sweep instead of exiting.
+  if (pod.config.database == null || !pod.config.futureCall.enabled) {
+    stderr.writeln(
+      'Future calls are disabled here: the orphan-upload sweep is not scheduled.',
+    );
+    return;
+  }
   try {
     await pod.futureCalls.cancel('orphan-upload-sweep');
   } catch (_) {

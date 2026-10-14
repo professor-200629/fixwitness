@@ -67,6 +67,11 @@ Commands and counts from the last runs: `dart test` (server) **33/33**; `flutter
 7. **Development server advertised `localhost`** to devices (upload and photo URLs). For phones and
    emulators run it with `SERVERPOD_API_SERVER_PUBLIC_HOST` / `SERVERPOD_WEB_SERVER_PUBLIC_HOST` set to
    the PC's LAN IP (README). In production these are the real domain.
+8. **The server crashed at start-up on Serverpod Cloud** (first deploy, 2026-10-14). Cloud's
+   Starter plan switches future calls off (`SERVERPOD_FUTURE_CALL_ENABLED` "is managed by your
+   project plan and can't be set"), so scheduling the hourly sweep threw `Bad state: FutureCalls
+   is not initialized` and the rollout failed after 10 minutes of restarts. Fixed: the server
+   checks `futureCall.enabled` and starts without the sweep when future calls are off.
 
 ## Data state (2026-10-11)
 
