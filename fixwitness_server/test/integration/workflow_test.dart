@@ -85,6 +85,24 @@ void main() {
         expect(view.canDecide, isTrue);
         expect(view.photos, hasLength(1));
         expect(view.condition!.items.first.state, ConditionState.damaged);
+        expect(view.conditionUpdates, isEmpty);
+
+        // A later check is added next to the first one; the customer still
+        // sees the condition as it was handed in, and the new check after it.
+        await endpoints.jobs.saveCondition(tech, job.id!, newOp(), [
+          ConditionItem(
+            key: 'screen',
+            label: 'Screen',
+            state: ConditionState.notWorking,
+          ),
+        ], DateTime.now());
+        view = await endpoints.customer.view(customer, token);
+        expect(view.condition!.items.first.state, ConditionState.damaged);
+        expect(view.conditionUpdates, hasLength(1));
+        expect(
+          view.conditionUpdates!.single.items.single.state,
+          ConditionState.notWorking,
+        );
 
         await endpoints.customer.approve(
           customer,

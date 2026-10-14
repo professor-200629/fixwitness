@@ -38,6 +38,7 @@ abstract class CustomerJobView
     required this.estimates,
     required this.decisions,
     this.condition,
+    this.conditionUpdates,
     required this.photos,
     required this.notes,
     required this.history,
@@ -59,6 +60,7 @@ abstract class CustomerJobView
     required List<_ilvyut6l.Estimate> estimates,
     required List<_imiq6wyq.EstimateDecision> decisions,
     _ipz1s64e.ConditionReport? condition,
+    List<_ipz1s64e.ConditionReport>? conditionUpdates,
     required List<_i4ormwf5.CustomerPhoto> photos,
     required List<_iaz1asnu.JobNote> notes,
     required List<_ixn72kw5.JobEvent> history,
@@ -98,6 +100,11 @@ abstract class CustomerJobView
           ? null
           : _ih76ajaf.Protocol().deserialize<_ipz1s64e.ConditionReport>(
               jsonSerialization['condition'],
+            ),
+      conditionUpdates: jsonSerialization['conditionUpdates'] == null
+          ? null
+          : _ih76ajaf.Protocol().deserialize<List<_ipz1s64e.ConditionReport>>(
+              jsonSerialization['conditionUpdates'],
             ),
       photos: _ih76ajaf.Protocol().deserialize<List<_i4ormwf5.CustomerPhoto>>(
         jsonSerialization['photos'],
@@ -140,7 +147,12 @@ abstract class CustomerJobView
 
   List<_imiq6wyq.EstimateDecision> decisions;
 
+  /// The first condition report: the state of the device when it was handed in.
   _ipz1s64e.ConditionReport? condition;
+
+  /// Later checks, oldest first. Earlier reports are never changed, so both
+  /// sides see every check.
+  List<_ipz1s64e.ConditionReport>? conditionUpdates;
 
   List<_i4ormwf5.CustomerPhoto> photos;
 
@@ -170,6 +182,7 @@ abstract class CustomerJobView
     List<_ilvyut6l.Estimate>? estimates,
     List<_imiq6wyq.EstimateDecision>? decisions,
     _ipz1s64e.ConditionReport? condition,
+    List<_ipz1s64e.ConditionReport>? conditionUpdates,
     List<_i4ormwf5.CustomerPhoto>? photos,
     List<_iaz1asnu.JobNote>? notes,
     List<_ixn72kw5.JobEvent>? history,
@@ -193,6 +206,10 @@ abstract class CustomerJobView
       'estimates': estimates.toJson(valueToJson: (v) => v.toJson()),
       'decisions': decisions.toJson(valueToJson: (v) => v.toJson()),
       if (condition != null) 'condition': condition?.toJson(),
+      if (conditionUpdates != null)
+        'conditionUpdates': conditionUpdates?.toJson(
+          valueToJson: (v) => v.toJson(),
+        ),
       'photos': photos.toJson(valueToJson: (v) => v.toJson()),
       'notes': notes.toJson(valueToJson: (v) => v.toJson()),
       'history': history.toJson(valueToJson: (v) => v.toJson()),
@@ -219,6 +236,10 @@ abstract class CustomerJobView
       'estimates': estimates.toJson(valueToJson: (v) => v.toJsonForProtocol()),
       'decisions': decisions.toJson(valueToJson: (v) => v.toJsonForProtocol()),
       if (condition != null) 'condition': condition?.toJsonForProtocol(),
+      if (conditionUpdates != null)
+        'conditionUpdates': conditionUpdates?.toJson(
+          valueToJson: (v) => v.toJsonForProtocol(),
+        ),
       'photos': photos.toJson(valueToJson: (v) => v.toJsonForProtocol()),
       'notes': notes.toJson(valueToJson: (v) => v.toJsonForProtocol()),
       'history': history.toJson(valueToJson: (v) => v.toJsonForProtocol()),
@@ -250,6 +271,7 @@ class _CustomerJobViewImpl extends CustomerJobView {
     required List<_ilvyut6l.Estimate> estimates,
     required List<_imiq6wyq.EstimateDecision> decisions,
     _ipz1s64e.ConditionReport? condition,
+    List<_ipz1s64e.ConditionReport>? conditionUpdates,
     required List<_i4ormwf5.CustomerPhoto> photos,
     required List<_iaz1asnu.JobNote> notes,
     required List<_ixn72kw5.JobEvent> history,
@@ -269,6 +291,7 @@ class _CustomerJobViewImpl extends CustomerJobView {
          estimates: estimates,
          decisions: decisions,
          condition: condition,
+         conditionUpdates: conditionUpdates,
          photos: photos,
          notes: notes,
          history: history,
@@ -294,6 +317,7 @@ class _CustomerJobViewImpl extends CustomerJobView {
     List<_ilvyut6l.Estimate>? estimates,
     List<_imiq6wyq.EstimateDecision>? decisions,
     Object? condition = _Undefined,
+    Object? conditionUpdates = _Undefined,
     List<_i4ormwf5.CustomerPhoto>? photos,
     List<_iaz1asnu.JobNote>? notes,
     List<_ixn72kw5.JobEvent>? history,
@@ -320,6 +344,9 @@ class _CustomerJobViewImpl extends CustomerJobView {
       condition: condition is _ipz1s64e.ConditionReport?
           ? condition
           : this.condition?.copyWith(),
+      conditionUpdates: conditionUpdates is List<_ipz1s64e.ConditionReport>?
+          ? conditionUpdates
+          : this.conditionUpdates?.map((e0) => e0.copyWith()).toList(),
       photos: photos ?? this.photos.map((e0) => e0.copyWith()).toList(),
       notes: notes ?? this.notes.map((e0) => e0.copyWith()).toList(),
       history: history ?? this.history.map((e0) => e0.copyWith()).toList(),

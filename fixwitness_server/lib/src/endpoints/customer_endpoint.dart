@@ -36,6 +36,11 @@ class CustomerEndpoint extends Endpoint {
       where: (t) => t.jobId.equals(jobId) & t.customerVisible.equals(true),
       orderBy: (t) => t.capturedAt,
     );
+    final conditions = await ConditionReport.db.find(
+      session,
+      where: (t) => t.jobId.equals(jobId),
+      orderBy: (t) => t.receivedAt,
+    );
     return CustomerJobView(
       shopName: shop.name,
       jobNumber: job.jobNumber,
@@ -52,11 +57,8 @@ class CustomerEndpoint extends Endpoint {
         where: (t) => t.jobId.equals(jobId),
         orderBy: (t) => t.decidedAt,
       ),
-      condition: await ConditionReport.db.findFirstRow(
-        session,
-        where: (t) => t.jobId.equals(jobId),
-        orderBy: (t) => t.receivedAt,
-      ),
+      condition: conditions.firstOrNull,
+      conditionUpdates: conditions.skip(1).toList(),
       photos: [
         for (final p in photos)
           CustomerPhoto(

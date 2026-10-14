@@ -554,6 +554,7 @@ class _CustomerReviewPageState extends State<CustomerReviewPage> {
 
   Widget _conditionSection(CustomerJobView v) {
     final c = v.condition;
+    final updates = v.conditionUpdates ?? const <ConditionReport>[];
     final intakePhotos = v.photos;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,50 +563,10 @@ class _CustomerReviewPageState extends State<CustomerReviewPage> {
         if (c == null)
           const Text('The shop has not recorded the condition yet.')
         else
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Recorded ${when(c.capturedAt)}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 6),
-                  for (final i in c.items.where(
-                    (i) => i.state != ConditionState.notApplicable,
-                  ))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              i.note == null
-                                  ? i.label
-                                  : '${i.label} — ${i.note}',
-                            ),
-                          ),
-                          Text(
-                            conditionLabel(i.state),
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  i.state == ConditionState.damaged ||
-                                      i.state == ConditionState.notWorking
-                                  ? Theme.of(context).colorScheme.error
-                                  : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
+          _conditionCard(c, 'Recorded ${when(c.capturedAt)}'),
+        // Later checks never replace the first one: both are shown.
+        for (final u in updates)
+          _conditionCard(u, 'Checked again ${when(u.capturedAt)}'),
         if (intakePhotos.isNotEmpty) ...[
           const SectionTitle('Photos'),
           Wrap(
@@ -615,6 +576,48 @@ class _CustomerReviewPageState extends State<CustomerReviewPage> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _conditionCard(ConditionReport c, String heading) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(heading, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 6),
+            for (final i in c.items.where(
+              (i) => i.state != ConditionState.notApplicable,
+            ))
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        i.note == null ? i.label : '${i.label} — ${i.note}',
+                      ),
+                    ),
+                    Text(
+                      conditionLabel(i.state),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color:
+                            i.state == ConditionState.damaged ||
+                                i.state == ConditionState.notWorking
+                            ? Theme.of(context).colorScheme.error
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 

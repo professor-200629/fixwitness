@@ -31,7 +31,7 @@ class JobScreen extends StatefulWidget {
   State<JobScreen> createState() => _JobScreenState();
 }
 
-class _JobScreenState extends State<JobScreen> {
+class _JobScreenState extends State<JobScreen> with WidgetsBindingObserver {
   int? _jobId;
   JobDetail? _detail;
   bool _fromCache = false;
@@ -52,6 +52,7 @@ class _JobScreenState extends State<JobScreen> {
           .where((o) => o.status == OpStatus.confirmed)
           .map((o) => o.opId.uuid),
     );
+    WidgetsBinding.instance.addObserver(this);
     s.addListener(_servicesChanged);
     _liveSub = s.liveChanges.listen((change) {
       if (change.jobId != _jobId || !mounted) return;
@@ -65,9 +66,17 @@ class _JobScreenState extends State<JobScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     s.removeListener(_servicesChanged);
     _liveSub?.cancel();
     super.dispose();
+  }
+
+  /// Changes made while the app was in the background (a customer approving
+  /// from their phone) are shown as soon as the shop comes back to it.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) _load();
   }
 
   /// Ids of this job's queued operations already confirmed by the server.

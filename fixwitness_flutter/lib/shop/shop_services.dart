@@ -82,6 +82,14 @@ class ShopServices extends ChangeNotifier {
     );
   }
 
+  /// Called when the app returns to the foreground. Android may have frozen
+  /// or dropped the socket while the app was in the background, and changes
+  /// sent in that time were missed, so open a fresh stream right away.
+  void reconnectLive() {
+    _liveBackoff = const Duration(seconds: 2);
+    _connectLive();
+  }
+
   void _scheduleLiveReconnect() {
     if (_disposed) return;
     _liveRetry?.cancel();

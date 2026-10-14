@@ -13,7 +13,11 @@ fields:
   currentEstimate: Estimate?
   estimates: List<Estimate>
   decisions: List<EstimateDecision>
+  ### The first condition report: the state of the device when it was handed in.
   condition: ConditionReport?
+  ### Later checks, oldest first. Earlier reports are never changed, so both
+  ### sides see every check.
+  conditionUpdates: List<ConditionReport>?
   photos: List<CustomerPhoto>
   notes: List<JobNote>
   history: List<JobEvent>

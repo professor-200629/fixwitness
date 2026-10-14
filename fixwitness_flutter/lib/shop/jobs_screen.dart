@@ -63,6 +63,7 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      s.reconnectLive();
       s.syncNow().then((_) => _refresh());
     }
   }

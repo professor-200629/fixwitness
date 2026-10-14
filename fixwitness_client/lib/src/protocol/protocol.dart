@@ -575,6 +575,20 @@ class Protocol extends _isd.DatabaseSerializationManager {
               .toList()
           as T;
     }
+    if (t == List<_ipz1s64e.ConditionReport>) {
+      return (data as List)
+              .map((e) => deserialize<_ipz1s64e.ConditionReport>(e))
+              .toList()
+          as T;
+    }
+    if (t == _isc.getType<List<_ipz1s64e.ConditionReport>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_ipz1s64e.ConditionReport>(e))
+                    .toList()
+              : null)
+          as T;
+    }
     if (t == List<_i4ormwf5.CustomerPhoto>) {
       return (data as List)
               .map((e) => deserialize<_i4ormwf5.CustomerPhoto>(e))
@@ -596,12 +610,6 @@ class Protocol extends _isd.DatabaseSerializationManager {
     if (t == List<_icm2x340.EstimateLine>) {
       return (data as List)
               .map((e) => deserialize<_icm2x340.EstimateLine>(e))
-              .toList()
-          as T;
-    }
-    if (t == List<_ipz1s64e.ConditionReport>) {
-      return (data as List)
-              .map((e) => deserialize<_ipz1s64e.ConditionReport>(e))
               .toList()
           as T;
     }
