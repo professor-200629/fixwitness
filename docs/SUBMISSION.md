@@ -60,6 +60,7 @@ always the same three: "the screen wasn't cracked when I gave it to you", "I nev
 
 **Try it.**
 - Web app and customer page: https://fixwitness.serverpod.space/
+- Demo video: https://youtu.be/pcIDlt0_vwg
 - Android APK: https://github.com/professor-200629/fixwitness/releases/tag/v1.0.0
 - Demo shop "Fix Point Mobiles" for judges: tap **Sign in** (the page opens on Sign up), then use
   the email and password given in the submission form. Or sign up with your own email: Serverpod

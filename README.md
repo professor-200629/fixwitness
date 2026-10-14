@@ -23,7 +23,7 @@ in the product (how AI was used to build it: [AI_DISCLOSURE.md](AI_DISCLOSURE.md
 |---|---|
 | Live web app (shop) and customer pages | https://fixwitness.serverpod.space/ (Serverpod Cloud) |
 | Android app | [FixWitness-1.0.0.apk](https://github.com/professor-200629/fixwitness/releases/download/v1.0.0/FixWitness-1.0.0.apk) ([release](https://github.com/professor-200629/fixwitness/releases/tag/v1.0.0)) |
-| Demo video (1:47) | see the submission |
+| Demo video (1:48) | https://youtu.be/pcIDlt0_vwg |
 
 Sign up with any email you can read (Serverpod Cloud emails the code), create a shop, check in a
 device, issue an estimate and open **Customer link**: the QR code or the copied link is the
