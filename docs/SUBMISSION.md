@@ -1,7 +1,6 @@
 # Hackathon submission
 
 Text for the submission form, and the plan for the video (under 2 minutes, public on YouTube).
-Placeholders in `<angle brackets>` are filled in once the Cloud deployment and repository exist.
 
 ## One-line summary
 
@@ -51,14 +50,36 @@ always the same three: "the screen wasn't cracked when I gave it to you", "I nev
 - 42 end-to-end checks run over HTTP and websockets.
 - The server and app tests, analysis and formatting run in GitHub Actions on every push; the
   end-to-end checks run against a live server.
-- Verified on an Android emulator and a physical Android phone, including an offline capture
-  that survived an app restart and a customer approval made on the phone.
+- Verified on a physical Android phone against the live Serverpod Cloud deployment: offline
+  check-in with a camera photo that synced when the network came back, the QR link, the refused
+  old-version approval, the signed approval of v2, the history, and link revocation. Also on an
+  Android emulator, including an offline capture that survived an app restart.
+- That run found two weaknesses, both fixed and redeployed the same night: the customer saw only
+  the first condition check, and the shop app missed an approval made while it was in the
+  background (STATUS.md, bugs 9 and 10).
 
 **Try it.**
 - Web app and customer page: https://fixwitness.serverpod.space/
-- Android APK: `<release link>`
-- Demo shop login for judges: `<email / password>`
+- Android APK: https://github.com/professor-200629/fixwitness/releases/tag/v1.0.0
+- Demo shop "Fix Point Mobiles" for judges: tap **Sign in** (the page opens on Sign up), then use
+  the email and password given in the submission form. Or sign up with your own email: Serverpod
+  Cloud sends the code.
 - Code: https://github.com/professor-200629/fixwitness
+
+**Build and run.** Flutter 3.47.6 and the Serverpod CLI 4.0.4; no Docker (Serverpod 4 runs an
+embedded PostgreSQL for development).
+
+```bash
+git clone https://github.com/professor-200629/fixwitness && cd fixwitness
+flutter pub get
+cd fixwitness_server
+serverpod run flutter_build                  # builds the web app the server serves
+dart run bin/main.dart --apply-migrations    # API :8080, web :8082 (embedded PostgreSQL)
+dart test                                    # 33 integration tests (second terminal)
+cd ../fixwitness_flutter && flutter test     # 11 app tests
+```
+
+Full setup, the Android build and the Cloud deploy steps are in the README.
 
 **AI disclosure.** Built with Claude Code (Claude Opus 5.5) and the official Serverpod agent
 skills. The developer wrote the specification and made the product decisions, and did the
