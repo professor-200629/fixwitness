@@ -1,6 +1,6 @@
 # FixWitness — project status
 
-_Last updated 2026-10-11._
+_Last updated 2026-10-14._
 
 ## Completed
 
@@ -36,6 +36,7 @@ Design notes: `docs/PLAN.md`. Setup: `README.md`. Demonstration: `docs/DEMO.md`.
 | Live updates reach only the right shop | e2e over HTTP + websocket: a second signed-in device of the shop received "Customer approved estimate v1." 25 ms after the customer's approve call; another shop's stream received nothing. Web app (2026-10-11): customer approvals sent from another tab and from the API turned the row to "Approved" with no reload and showed "Job #4: Customer approved estimate v1.". Server test: a technician's `shop.watch()` stream receives "Customer approved estimate v1." (marked as a customer action) and "Note added by Ravi." in order; a job created by another shop is not received | PASS |
 | Technician invites | Web app: owner menu → "Invite a technician" showed a code with its 24 h expiry; a second account chose "Join with a code", typed it in lower case and landed on the shop's job list as a technician, whose menu has no invite option. e2e: join, technician sees the shop's jobs, technician cannot invite. Server tests: join with the owner's code (case-insensitive) gives a technician who can open the shop's jobs; second use, expired and made-up codes refused (`inviteInvalid`); technicians cannot invite; a member of one shop cannot join another | PASS |
 | Orphan photo bytes cleaned up | Server test: an upload never registered is deleted by the sweep once its grant is past the grace period; registered evidence in the same job is kept; young grants untouched | PASS |
+| **Live on Serverpod Cloud, physical phone** (2026-10-14) | Release APK (`SERVER_URL` = Cloud API) on the Samsung SM-A366E, customer pages in the phone's Chrome. Shop app with networking cut for the app only: check-in, condition checklist, camera photo and a note saved offline ("Offline. 3 item(s) saved on this phone"); network restored, all sent within 8 s and shown from the server. Estimate v1 → customer link (QR) → customer page; v1 ticked, shop issued v2 (+ display cable, with reason), customer pressed Approve on v1 → "You were looking at version 1, but the shop has since issued version 2. Your decision was not recorded" with the change summary; v2 approved. History on the shop side lists the refused decision and the signed approval. Link revoked → `linkRevoked`. Made-up token → `linkInvalid`; shop call without sign-in → 401 | PASS (screens in `docs/screenshots/`, recording in the demo video) |
 | Secrets not in source control | `passwords.yaml`, demo credentials, web build, e2e artifacts gitignored; `git ls-files` checked | PASS |
 
 Commands and counts from the last runs: `dart test` (server) **33/33**; `flutter test` **11/11** (offline queue + job cache);
@@ -72,6 +73,14 @@ Commands and counts from the last runs: `dart test` (server) **33/33**; `flutter
    project plan and can't be set"), so scheduling the hourly sweep threw `Bad state: FutureCalls
    is not initialized` and the rollout failed after 10 minutes of restarts. Fixed: the server
    checks `futureCall.enabled` and starts without the sweep when future calls are off.
+9. **The customer saw only the first condition check** (phone run on Cloud). A correction saved a
+   minute later at the counter was visible to the shop ("2 checks on record") but not to the
+   customer. The first report still leads ("when you handed it in"), and every later check now
+   follows it with its own time. Server test extended.
+10. **The shop app missed a customer's approval made while it was in the background** (phone run).
+    The job screen still said "waiting for customer approval" until a manual reload. On resume the
+    job screen reloads and the live stream is reopened at once; checked on the phone: approving in
+    Chrome and switching back showed "The customer approved v1" with no reload.
 
 ## Data state (2026-10-11)
 
@@ -100,9 +109,9 @@ after 24 h. Both have tests (`test/job_cache_test.dart`, `outbox_test.dart`).
   Serverpod auth UI) still applies the Kotlin Gradle Plugin, which future Flutter versions reject.
 - The outbox's `attempts` counter also counts offline retries (29 while in airplane mode); it is
   informational only.
-- **Not deployed publicly.** Serverpod Cloud needs an account created by the owner
-  (console.serverpod.dev) and `serverpod cloud launch`; ngrok is installed but has no auth token.
-  The demo currently runs on this PC (http://localhost:8082).
+- **Deployed on Serverpod Cloud** (Starter plan): https://fixwitness.serverpod.space/, API
+  https://fixwitness.api.serverpod.space/. The plan switches future calls off, so the hourly
+  orphan-upload sweep does not run there (it is covered by a server test on a real server).
 - **Customer page load time (fixed 2026-10-11).** It was 27 s for `main.dart.js` on the phone:
   3.49 MB sent uncompressed, crossing the phone's mobile link twice because the PC uses its hotspot.
   Now: the shop app is a deferred chunk (customer bundle 2.95 MB, shop-only part 553 KB loaded
@@ -118,12 +127,12 @@ after 24 h. Both have tests (`test/job_cache_test.dart`, `outbox_test.dart`).
   could still approve; the audit trail is the only control for that.
 - **Web shop app queue is in memory** (lost on reload). Offline capture is an Android feature;
   the web build says so in the sync queue.
-- Production configuration (domain, TLS, external PostgreSQL, object storage, email provider) is
-  documented but not set up.
-- Live updates, invites and the QR/Share sheet were exercised in the web app, not yet on the
-  Android build.
+- Production runs on Serverpod Cloud (managed PostgreSQL, private storage, Cloud email, TLS on
+  `*.serverpod.space`). Self-hosting elsewhere is documented in the README but not exercised.
+- Live updates and the QR sheet were exercised on the Android build (2026-10-14); technician
+  invites only in the web app.
 
 ## Next step
 
-Decide the deployment target (Serverpod Cloud account, or a temporary tunnel from this PC). Then
-repeat DEMO.md step 6 on a physical phone with the camera.
+Submission (2026-10-14): public repository, Cloud deployment, APK release
+(https://github.com/professor-200629/fixwitness/releases/tag/v1.0.0) and demo video.

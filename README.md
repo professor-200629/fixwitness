@@ -17,6 +17,25 @@ Repair records an independent phone-repair shop and its customers can both trust
 No payments, inventory, messaging integrations, automatic diagnosis or pricing. No AI features
 in the product (how AI was used to build it: [AI_DISCLOSURE.md](AI_DISCLOSURE.md)).
 
+## Try it
+
+| | |
+|---|---|
+| Live web app (shop) and customer pages | https://fixwitness.serverpod.space/ (Serverpod Cloud) |
+| Android app | [FixWitness-1.0.0.apk](https://github.com/professor-200629/fixwitness/releases/download/v1.0.0/FixWitness-1.0.0.apk) ([release](https://github.com/professor-200629/fixwitness/releases/tag/v1.0.0)) |
+| Demo video (1:47) | see the submission |
+
+Sign up with any email you can read (Serverpod Cloud emails the code), create a shop, check in a
+device, issue an estimate and open **Customer link**: the QR code or the copied link is the
+customer's page. Open it in another browser or on another phone, then issue a revised estimate
+from the shop and press *Approve* on the old version to see the refusal.
+
+| Customer: one exact version | Customer: old version refused | Shop: offline queue | Shop: history |
+|---|---|---|---|
+| ![](docs/screenshots/customer_estimate.png) | ![](docs/screenshots/customer_refused_old_version.png) | ![](docs/screenshots/shop_offline_queue.png) | ![](docs/screenshots/shop_history.png) |
+
+Screens from a Samsung phone (Android 16) against the Cloud deployment, 2026-10-14.
+
 ## Why
 
 In a small repair shop the arguments are always the same: "the screen wasn't cracked when I gave
